@@ -43,6 +43,71 @@ By default the renderer automatically looks for `altered-card-renderer-proxy.php
 
 ---
 
+## Self-hosting
+
+### What you actually need to host
+
+The renderer itself (`altered-card-renderer.js`) is a single vanilla JS file — no build step, no npm, no framework. It fetches card config files and assets from `https://img.altered-db.com/forge/` automatically (CDN, CORS open). **You do not need to host the config or assets yourself.**
+
+The only reason to run a server at all is the **PHP proxy** — it handles two things the browser can't do directly:
+- Fetch card data from the Altered API (CORS-restricted)
+- Fetch card background images from S3/CDN (CORS-restricted)
+
+### Option A — Static hosting only (no server-side code)
+
+Drop `altered-card-renderer.js` on any static host (GitHub Pages, Netlify, your own Apache/Nginx, a shared host…). Set `proxyUrl: false` to disable the proxy and call the API directly from the browser.
+
+```html
+<script src="/path/to/altered-card-renderer.js"
+        data-proxy="false"></script>
+
+<altered-card ref="ALT_CORE_B_AX_04_U_10"></altered-card>
+```
+
+> **Caveat:** this only works if the card API responds with `Access-Control-Allow-Origin: *`. If the API later restricts CORS, cards will silently fail to load. Use Option B for a robust setup.
+
+### Option B — Static host + PHP proxy (recommended)
+
+Place both files in the same folder on a PHP-enabled server:
+
+```
+your-site/
+└── cards/
+    ├── altered-card-renderer.js
+    └── altered-card-renderer-proxy.php   ← same folder, auto-detected
+```
+
+The renderer auto-detects the proxy — no configuration needed.
+
+**Server requirements:**
+
+| Requirement | Details |
+|---|---|
+| Web server | Apache, Nginx, LiteSpeed, any shared host — anything that serves static files |
+| PHP | 7.4 or later |
+| PHP extension | `curl` (enabled by default on most hosts) |
+| HTTPS | Strongly recommended — the card API and image CDN are HTTPS-only |
+
+No database, no composer, no framework. If your host can run a `.php` file, it works.
+
+**Verify cURL is available** (optional sanity check):
+
+```bash
+php -r "echo function_exists('curl_init') ? 'OK' : 'cURL missing';"
+```
+
+### Option C — jsDelivr (zero hosting)
+
+If you don't want to host anything at all, load the renderer directly from jsDelivr. The proxy is not available in this case, so it falls back to direct API calls (same caveat as Option A).
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/PolluxTroy0/Altered-Card-Renderer@main/altered-card-renderer.js"></script>
+
+<altered-card ref="ALT_CORE_B_AX_04_U_10"></altered-card>
+```
+
+---
+
 ## Configuration
 
 ### In `altered-card-renderer.js`
