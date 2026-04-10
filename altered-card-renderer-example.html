@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Altered Card Renderer Example</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 2rem 1.5rem;
+      background: #0e1428;
+      color: #c8d0e0;
+      font: 0.95rem/1.5 sans-serif;
+    }
+
+    h2 {
+      color: #e8eaf0;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin: 0 0 1rem;
+    }
+
+    section {
+      max-width: 1100px;
+      margin: 0 auto 3rem;
+    }
+
+    /* ── Part 1 — Search ── */
+
+    .search-form {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .search-form input {
+      flex: 1 1 260px;
+      padding: 0.55rem 0.8rem;
+      background: #1a2240;
+      border: 1px solid #2e3a5a;
+      border-radius: 6px;
+      color: #e8eaf0;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .search-form input:focus {
+      border-color: #4a6fa5;
+    }
+
+    .search-form select {
+      padding: 0.55rem 0.6rem;
+      background: #1a2240;
+      border: 1px solid #2e3a5a;
+      border-radius: 6px;
+      color: #e8eaf0;
+      font-size: 0.95rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .search-form button {
+      padding: 0.55rem 1.2rem;
+      background: #3a5a9a;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .search-form button:hover {
+      background: #4a6fba;
+    }
+
+    #search-result {
+      margin-top: 1.5rem;
+      max-width: 260px;
+    }
+
+    /* ── Part 2 — Examples ── */
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    altered-card {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Part 1 — Card lookup -->
+  <section>
+    <h2>Card lookup</h2>
+    <div class="search-form">
+      <input id="card-ref" type="text" placeholder="Card reference — e.g. ALT_CORE_B_AX_04_U_10" spellcheck="false">
+      <select id="card-locale">
+        <option value="en">EN</option>
+        <option value="fr">FR</option>
+        <option value="es">ES</option>
+        <option value="it">IT</option>
+        <option value="de">DE</option>
+      </select>
+      <button id="card-search-btn">Show card</button>
+    </div>
+    <div id="search-result"></div>
+  </section>
+
+  <!-- Part 2 — Example cards -->
+  <section>
+    <h2>Examples</h2>
+    <div class="grid">
+      <altered-card ref="ALT_CORE_B_AX_04_U_10"></altered-card>
+      <altered-card ref="ALT_EOLE_B_OR_109_U_374"></altered-card>
+      <altered-card ref="ALT_DUSTER_B_AX_86_U_3590"></altered-card>
+      <altered-card ref="ALT_ALIZE_B_AX_39_U_7788"></altered-card>
+      <altered-card ref="ALT_BISE_B_AX_50_U_12676"></altered-card>
+      <altered-card ref="ALT_COREKS_B_AX_08_U_2868"></altered-card>
+    </div>
+  </section>
+
+  <script src="../altered-card-renderer.js"></script>
+  <script>
+    document.getElementById('card-search-btn').addEventListener('click', () => {
+      const ref    = document.getElementById('card-ref').value.trim();
+      const locale = document.getElementById('card-locale').value;
+      if (!ref) return;
+
+      const container = document.getElementById('search-result');
+      container.innerHTML = '';
+
+      const card = document.createElement('altered-card');
+      card.setAttribute('ref', ref);
+      card.setAttribute('locale', locale);
+      container.appendChild(card);
+    });
+
+    document.getElementById('card-ref').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('card-search-btn').click();
+    });
+  </script>
+
+</body>
+</html>

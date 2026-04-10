@@ -1,0 +1,5 @@
+This folder will contain the card assets (frame images, fonts, biome images, logos, etc.)
+once the project is complete and published to the GitHub repository.
+
+In the meantime, the renderer loads these files directly from https://altered-db.com/forge/
+— no action needed on your part for a standard setup.

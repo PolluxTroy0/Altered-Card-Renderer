@@ -1,0 +1,615 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Altered Card Renderer â€” Documentation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0e1428;
+      color: #ccc;
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 860px;
+    }
+
+    h1 { color: #fff; font-size: 1.6rem; margin-bottom: 0.3rem; }
+    h2 { color: #aac8ff; font-size: 1.1rem; margin: 2rem 0 0.6rem; border-bottom: 1px solid #1e2f50; padding-bottom: 0.3rem; }
+    h3 { color: #88aadd; font-size: 0.95rem; margin: 1.2rem 0 0.4rem; }
+
+    p  { margin-bottom: 0.8rem; }
+    ul { margin: 0.4rem 0 0.8rem 1.4rem; }
+    li { margin-bottom: 0.3rem; }
+
+    a  { color: #6699ff; }
+
+    .subtitle {
+      color: #667;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Code blocks */
+    pre {
+      background: #07101f;
+      border: 1px solid #1a2a45;
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      margin: 0.6rem 0 1rem;
+      color: #c5d8f5;
+    }
+
+    code {
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+
+    pre code { color: inherit; }
+
+    /* Inline code */
+    p code, li code, td code {
+      background: #0d1c33;
+      border: 1px solid #1e3050;
+      border-radius: 3px;
+      padding: 0.1em 0.4em;
+      font-size: 0.85em;
+      color: #9bbfe0;
+    }
+
+    /* Tip / warning boxes */
+    .box {
+      border-radius: 6px;
+      padding: 0.8rem 1rem;
+      margin: 0.8rem 0 1rem;
+      font-size: 0.88rem;
+    }
+    .box.tip     { background: #0d1f10; border-left: 3px solid #3a8a4a; color: #9dcc9d; }
+    .box.warning { background: #1f150a; border-left: 3px solid #aa6030; color: #ccaa80; }
+    .box.info    { background: #0d1828; border-left: 3px solid #3060aa; color: #88aacc; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; margin: 0.6rem 0 1.2rem; font-size: 0.85rem; }
+    th { background: #101e35; color: #8ab; text-align: left; padding: 0.5rem 0.8rem; font-weight: 600; }
+    td { padding: 0.5rem 0.8rem; border-bottom: 1px solid #15243a; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+
+    /* Syntax highlighting (manual) */
+    .kw  { color: #c792ea; }  /* keyword */
+    .fn  { color: #82aaff; }  /* function/method */
+    .str { color: #c3e88d; }  /* string */
+    .cm  { color: #546e7a; font-style: italic; }  /* comment */
+    .nb  { color: #f78c6c; }  /* number/bool */
+  </style>
+</head>
+<body>
+
+<h1>Altered Card Renderer</h1>
+<p class=”subtitle”>
+  Documentation for <code>altered-card-renderer.js</code> standalone canvas renderer for Altered TCG cards.<br>
+  <a href=”https://github.com/PolluxTroy0/Altered-Card-Renderer”>github.com/PolluxTroy0/Altered-Card-Renderer</a>
+</p>
+
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ -->
+<h2>Embed anywhere &#x2014; &lt;altered-card&gt;</h2>
+
+<p>
+  The simplest way to display cards. Drop the <code>&lt;script&gt;</code> tag and use
+  <code>&lt;altered-card&gt;</code> wherever you want on the page &#x2014; no JavaScript required.
+</p>
+
+<p><strong>Via jsDelivr (no hosting required):</strong></p>
+<pre><code><span class="kw">&lt;script</span> src=<span class="str">"https://cdn.jsdelivr.net/gh/PolluxTroy0/Altered-Card-Renderer@main/altered-card-renderer.js"</span><span class="kw">&gt;&lt;/script&gt;</span>
+
+<span class="kw">&lt;altered-card</span> ref=<span class="str">"ALT_CORE_B_AX_04_U_10"</span><span class="kw">&gt;&lt;/altered-card&gt;</span>
+<span class="kw">&lt;altered-card</span> ref=<span class="str">"ALT_EOLE_B_OR_109_U_374"</span> locale=<span class="str">"fr"</span><span class="kw">&gt;&lt;/altered-card&gt;</span></code></pre>
+
+<p><strong>Self-hosted:</strong></p>
+<pre><code><span class="kw">&lt;script</span> src=<span class="str">"https://your-domain.com/path/to/altered-card-renderer.js"</span><span class="kw">&gt;&lt;/script&gt;</span>
+
+<span class="kw">&lt;altered-card</span> ref=<span class="str">"ALT_CORE_B_AX_04_U_10"</span><span class="kw">&gt;&lt;/altered-card&gt;</span>
+<span class="kw">&lt;altered-card</span> ref=<span class="str">"ALT_EOLE_B_OR_109_U_374"</span> locale=<span class="str">"fr"</span><span class="kw">&gt;&lt;/altered-card&gt;</span></code></pre>
+
+<p>
+  By default the renderer looks for <code>altered-card-renderer-proxy.php</code> in the same folder as
+  <code>altered-card-renderer.js</code>, and loads card configs from <code>https://altered-db.com/forge/</code>. No attributes
+  needed for a standard setup. Override with <code>data-proxy</code> if your proxy is elsewhere.
+</p>
+
+<p>Style it like any block element &#x2014; set a <code>width</code>, drop it in a flex row, a grid, an article. The canvas inside fills the element width and maintains the card aspect ratio automatically.</p>
+
+<table>
+  <tr><th>Attribute</th><th>Default</th><th>Description</th></tr>
+  <tr><td><code>ref</code></td><td>&#x2014;</td><td>Card reference (required)</td></tr>
+  <tr><td><code>locale</code></td><td><code>en</code></td><td>Language &#x2014; <code>en</code>, <code>fr</code>, <code>es</code>, <code>it</code>, <code>de</code></td></tr>
+  <tr><td><code>collection</code></td><td><code>official</code></td><td>Frame collection (<code>official</code> or <code>community</code>)</td></tr>
+</table>
+
+<table>
+  <tr><th><code>&lt;script&gt;</code> attribute</th><th>Description</th></tr>
+  <tr><td><code>data-proxy</code></td><td>Override the proxy. <code>"https://…"</code> = explicit URL. <code>"false"</code> = no proxy, API called directly from the browser (requires the API to allow CORS). Omit to auto-detect <code>altered-card-renderer-proxy.php</code> next to the script.</td></tr>
+  <tr><td><code>data-config-base</code></td><td>Card config root URL. Defaults to <code>https://altered-db.com/forge/</code> &#x2014; this is where all card configuration files are hosted: element positions, sizes, fonts, frame rules, biome images, etc.</td></tr>
+</table>
+
+<div class="box warning">
+  The default <code>data-config-base</code> points to <code>https://altered-db.com/forge/</code>, which hosts all the card configuration files (element positions, frame rules, fonts, biome images…). This is temporary — the config will be published to GitHub once all card settings are finalised.
+</div>
+
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<h2>External resources configuration</h2>
+
+<p>
+  Default paths are declared at the top of <code>altered-card-renderer.js</code>
+  in the <code>RESOURCES</code> block:
+</p>
+
+<pre><code><span class="kw">const</span> RESOURCES = {
+  configBaseUrl:    <span class="str">"https://altered-db.com/forge/"</span>,           <span class="cm">// forge base URL</span>
+  configIndex:      <span class="str">"config/index.json"</span>,                       <span class="cm">// config manifest</span>
+  alteredIconsCss:  <span class="str">"alteredicons.css"</span>,                         <span class="cm">// Altered icon font</span>
+  qrcodeLib:        <span class="str">"assets/vendor/qrcodejs/qrcode.min.js"</span>,    <span class="cm">// QR code library</span>
+  cardApiUrl:       <span class="str">"https://…/cards/{ref}?locale={locale}"</span>,   <span class="cm">// card data API</span>
+  proxyUrl:         <span class="nb">null</span>,                                       <span class="cm">// null | false | "https://…"</span>
+  useApiBackground: <span class="nb">true</span>,                                       <span class="cm">// true = API image, false = custom URL</span>
+  backgroundUrl:    <span class="str">""</span>,    <span class="cm">// template: {ref} {locale} {faction} {rarity} {set} {id} — see img.altered-db.com</span>
+  backgroundUrlIdTransform: <span class="nb">null</span>, <span class="cm">// [[regexPattern, replacement], …] applied to {id} before URL substitution — null to disable</span>
+                            <span class="cm">// e.g. [["_U_\\d+$", "_U"]] → ALT_CORE_B_AX_07_U_1698 becomes ALT_CORE_B_AX_07_U</span>
+};</code></pre>
+
+<p>
+  All <em>relative</em> paths are resolved against <code>configBaseUrl</code>.
+  Paths starting with <code>http://</code>, <code>https://</code> or <code>/</code>
+  are used as-is.
+</p>
+
+<div class="box tip">
+  If you host <code>altered-card-renderer.js</code> on your own server, just edit the
+  <code>RESOURCES</code> block at the top of the file with the correct URLs.
+  No other code needs to be touched.
+</div>
+
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<h2>API</h2>
+
+<h3>AlteredRender.init( options )</h3>
+<p>Loads card configs, fonts and biome images. Optional &#x2014; <code>mount()</code> calls it automatically if needed.</p>
+<table>
+  <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+  <tr><td><code>options</code></td><td>object</td><td>Overrides any key from <code>RESOURCES</code> (especially <code>configBaseUrl</code>).</td></tr>
+</table>
+<p>Returns a <code>Promise&lt;config&gt;</code> resolved when everything is ready.</p>
+<div class="box info">
+  Configs and images are loaded <strong>once</strong> and cached.
+  Multiple calls to <code>init()</code> or <code>mount()</code> only trigger a single fetch.
+</div>
+
+<hr style="border:none;border-top:1px solid #1a2a45;margin:1.5rem 0">
+
+<h3>AlteredRender.mount( container, cardJson, options? )</h3>
+<p>Renders a card into a DOM element.</p>
+<table>
+  <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+  <tr><td><code>container</code></td><td>HTMLElement</td><td>Target element. Its content is replaced by the canvas.</td></tr>
+  <tr><td><code>cardJson</code></td><td>object</td><td>Card config JSON (<code>_type: "card-config"</code>).</td></tr>
+  <tr><td><code>options</code></td><td>object</td><td>Same keys as <code>init()</code>, optional.</td></tr>
+</table>
+<p>Returns a <code>Promise</code> resolved with <code>{ canvas, state, redraw }</code>:</p>
+<ul>
+  <li><code>canvas</code> â€” the created <code>&lt;canvas&gt;</code> element</li>
+  <li><code>state</code> â€” internal card state (for advanced read/write)</li>
+  <li><code>redraw()</code> â€” re-renders the card (useful if you update <code>state.values</code> manually)</li>
+</ul>
+
+
+<hr style="border:none;border-top:1px solid #1a2a45;margin:1.5rem 0">
+
+<h3>AlteredRender.mountFromApi( container, apiJson, mapping?, options? )</h3>
+<p>
+  Renders a card from an external API JSON by mapping field names
+  through a descriptor. If <code>mapping</code> is omitted, the default
+  <code>API_MAPPING</code> block defined at the top of <code>altered-card-renderer.js</code> is used.
+</p>
+<table>
+  <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+  <tr><td><code>container</code></td><td>HTMLElement</td><td>Target element.</td></tr>
+  <tr><td><code>apiJson</code></td><td>object</td><td>Raw JSON returned by the external API.</td></tr>
+  <tr><td><code>mapping</code></td><td>object</td><td>Field mapping descriptor (see below). Optional â€” defaults to <code>API_MAPPING</code>.</td></tr>
+  <tr><td><code>options</code></td><td>object</td><td>Same keys as <code>init()</code>, optional.</td></tr>
+</table>
+<p>Returns the same <code>Promise&lt;{ canvas, state, redraw }&gt;</code> as <code>mount()</code>.</p>
+
+<h3>The <code>forge</code> section in the API response</h3>
+
+<p>
+  The <code>forge</code> section is <strong>entirely optional</strong>. The renderer
+  auto-detects faction, frame type, background image, set logo and language from
+  the regular API fields. Only add <code>forge</code> fields when you need to
+  override the defaults configured in <code>altered-card-renderer.js</code>:
+</p>
+
+<pre><code>{
+  <span class="cm">// forge section is optional â€” omit entirely if defaults are correct</span>
+  <span class="str">"forge"</span>: {
+    <span class="str">"frameType"</span>:  <span class="str">"char_u_1"</span>,        <span class="cm">// override auto-selected frame (FRAME_AUTO_SELECT)</span>
+    <span class="str">"collection"</span>: <span class="str">"official"</span>,        <span class="cm">// override DEFAULT_COLLECTION in altered-card-renderer.js</span>
+    <span class="str">"qrCode"</span>:     <span class="nb">true</span>,              <span class="cm">// show QR code (hidden by default)</span>
+    <span class="str">"bgTransform"</span>: {                   <span class="cm">// override background positioning</span>
+      <span class="str">"zoom"</span>:  <span class="nb">130</span>,                  <span class="cm">// % â€” crops into image (default: 120)</span>
+      <span class="str">"x"</span>:     <span class="nb">60</span>,                   <span class="cm">// horizontal focal point in % (default: 50)</span>
+      <span class="str">"y"</span>:     <span class="nb">30</span>,                   <span class="cm">// vertical focal point in % (default: 50)</span>
+      <span class="str">"flipX"</span>: <span class="nb">true</span>                  <span class="cm">// mirror horizontally (default: false)</span>
+    }
+  },
+  <span class="cm">// All other fields come from the API as-is â€” no duplication needed:</span>
+  <span class="str">"cardGroup"</span>: {
+    <span class="str">"faction"</span>: { <span class="str">"name"</span>: <span class="str">"Axiom"</span> },  <span class="cm">// â†’ faction resolved automatically</span>
+    <span class="str">"name"</span>: { <span class="str">"en"</span>: <span class="str">"Kelon Elemental"</span>, <span class="str">"fr"</span>: <span class="str">"Ã‰lÃ©mentaire de KÃ©lon"</span> },
+    <span class="cm">// â€¦</span>
+  },
+  <span class="str">"cardRarity"</span>: { <span class="str">"reference"</span>: <span class="str">"UNIQUE"</span> },  <span class="cm">// â†’ selects assets[2]</span>
+  <span class="str">"set"</span>: { <span class="str">"reference"</span>: <span class="str">"CORE"</span> },           <span class="cm">// â†’ matches setLogos[].code in ui.json</span>
+  <span class="str">"assets"</span>: [
+    <span class="str">"https://â€¦/Card_C_WEB.webp"</span>,   <span class="cm">// 0 â€” Common</span>
+    <span class="str">"https://â€¦/Card_R_WEB.webp"</span>,   <span class="cm">// 1 â€” Rare</span>
+    <span class="str">"https://â€¦/Card_U_WEB.webp"</span>    <span class="cm">// 2 â€” Unique  â† auto-selected</span>
+  ]
+}</code></pre>
+
+<table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td><code>forge.lang</code></td><td>Auto-injected by <code>altered-card-renderer-proxy.php</code> from the <code>locale</code> URL parameter. Falls back to <code>"en"</code> if absent. No need to set manually when using the proxy.</td></tr>
+  <tr><td><code>forge.frameType</code></td><td>Override the frame auto-selection (<code>FRAME_AUTO_SELECT</code> in <code>altered-card-renderer.js</code>). If absent, the frame is chosen automatically based on rarity and card content.</td></tr>
+  <tr><td><code>forge.collection</code></td><td>Override the frame collection. Defaults to <code>DEFAULT_COLLECTION</code> in <code>altered-card-renderer.js</code> (<code>"official"</code>).</td></tr>
+  <tr><td><code>forge.bgTransform</code></td><td>If absent, defaults from <code>API_MAPPING</code> apply (<code>zoom: 120, x: 50, y: 50, flipX: false</code>). Individual sub-fields can be omitted.</td></tr>
+  <tr><td><code>forge.bgTransform.zoom</code></td><td>Background zoom in % â€” values above 100 crop into the image. Default: <code>120</code>.</td></tr>
+  <tr><td><code>forge.bgTransform.x</code></td><td>Horizontal focal point in % (0 = left, 50 = center, 100 = right). Default: <code>50</code>.</td></tr>
+  <tr><td><code>forge.bgTransform.y</code></td><td>Vertical focal point in % (0 = top, 50 = center, 100 = bottom). Default: <code>50</code>.</td></tr>
+  <tr><td><code>forge.bgTransform.flipX</code></td><td>Mirror the background image horizontally. Default: <code>false</code>.</td></tr>
+  <tr><td><code>forge.qrCode</code></td><td><code>true</code> = display the QR code (using <code>qrUrlDetail</code> from the API). Absent or <code>false</code> = hidden.</td></tr>
+  <tr><td colspan="3" style="background:#1a2030;color:#6699cc;font-size:.8rem;padding:.4rem .6rem"><strong>Auto-detected from regular API fields â€” no forge field needed</strong></td></tr>
+  <tr><td><code>cardGroup.faction.name</code></td><td>auto</td><td>Faction name used to select the frame config (<code>"Axiom"</code>, <code>"Bravos"</code>, <code>"Lyra"</code>, <code>"Muna"</code>, <code>"Ordis"</code>, <code>"Yzmir"</code>â€¦).</td></tr>
+  <tr><td><code>cardRarity.reference</code></td><td>auto</td><td>Selects the background image from <code>assets[]</code> via <code>RARITY_ASSET_INDEX</code> in <code>altered-card-renderer.js</code>: <code>COMMON</code>â†’0, <code>RARE</code>â†’1, <code>UNIQUE</code>â†’2. Falls back to <code>imagePath.{lang}</code> if <code>assets[]</code> is absent.</td></tr>
+  <tr><td><code>set.reference</code></td><td>auto</td><td>Matched against the set logo list to select the set logo image automatically. No match = no logo shown.</td></tr>
+</table>
+
+<h3>Frame auto-selection</h3>
+
+<p>
+  When <code>forge.frameType</code> is absent, the renderer picks the frame automatically
+  using <code>FRAME_AUTO_SELECT</code> in <code>altered-card-renderer.js</code>.
+  Rules are defined per rarity code and evaluated in order â€” the first matching rule wins.
+</p>
+
+<pre><code><span class="kw">const</span> FRAME_AUTO_SELECT = {
+  <span class="str">"UNIQUE"</span>: [
+    <span class="cm">// _eff1(d, l) â†’ length of cardGroup.mainEffect text</span>
+    <span class="cm">// _eff2(d)    â†’ true if cardGroup.echoEffect is non-empty</span>
+    { <span class="fn">frameType</span>: <span class="str">"char_u_1"</span>, <span class="fn">test</span>: (d, l) =&gt;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">100</span> },
+    { <span class="fn">frameType</span>: <span class="str">"char_u_2"</span>, <span class="fn">test</span>: (d, l) =&gt;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">100</span> },
+    { <span class="fn">frameType</span>: <span class="str">"char_u_3"</span>, <span class="fn">test</span>: (d, l) =&gt; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">100</span> },
+    { <span class="fn">frameType</span>: <span class="str">"char_u_4"</span>, <span class="fn">test</span>: (d, l) =&gt; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">100</span> },
+  ],
+  <span class="cm">// "COMMON": [ â€¦ ],</span>
+  <span class="cm">// "RARE":   [ â€¦ ],</span>
+};</code></pre>
+
+<div class="box info">
+  <code>mainEffect</code> is the card's main effect text (<code>cardGroup.mainEffect</code>).
+  <code>echoEffect</code> is the discard/echo effect (<code>cardGroup.echoEffect</code> â€” an array;
+  empty array = no echo effect). The 100-character threshold and frame IDs are fully
+  configurable directly in the block.
+</div>
+
+<h3>Biome variant auto-detection</h3>
+
+<p>
+  Each biome element (forest, mountain, ocean) has a <code>bgVariant</code> that determines
+  which background badge image is displayed: <code>zero</code>, <code>normal</code>, or <code>best</code>.
+  When using <code>mountFromApi()</code>, the variant is computed automatically from the
+  biome values returned by the API:
+</p>
+<ul>
+  <li>value <code>== 0</code> â†’ <code>"zero"</code></li>
+  <li>value <code>== highest</code> among the three biomes â†’ <code>"best"</code> (ties: all tied biomes get <code>"best"</code>)</li>
+  <li>otherwise â†’ <code>"normal"</code></li>
+</ul>
+<p>
+  The API fields to read are declared in the <code>BIOME_VARIANT_AUTO</code> block at the
+  top of <code>altered-card-renderer.js</code>:
+</p>
+
+<pre><code><span class="kw">const</span> BIOME_VARIANT_AUTO = {
+  <span class="str">forestValue</span>:   <span class="str">"cardGroup.forestPower"</span>,
+  <span class="str">mountainValue</span>: <span class="str">"cardGroup.mountainPower"</span>,
+  <span class="str">oceanValue</span>:    <span class="str">"cardGroup.oceanPower"</span>,
+};
+<span class="cm">// Set a value to null to disable auto-detection for that biome.</span></code></pre>
+
+<p>
+  This block is independent from <code>API_MAPPING.values</code> â€” both can reference the
+  same API fields without conflict. For forge card JSONs (<code>mount()</code>), the
+  <code>bgVariant</code> stored in the JSON is used as-is; auto-detection only applies in
+  <code>mountFromApi()</code>.
+</p>
+
+<h3>QR code — API_QR_CODE</h3>
+
+<p>
+  The <code>API_QR_CODE</code> block controls whether the QR code is shown and what URL it encodes
+  when rendering from an API response. It sits at the top of <code>altered-card-renderer.js</code>
+  alongside the other configurable blocks.
+</p>
+
+<pre><code><span class="kw">const</span> API_QR_CODE = {
+  <span class="cm">// true  → always show the QR code on API-rendered cards</span>
+  <span class="cm">// false → always hide it</span>
+  <span class="cm">// null  → use the default from config/elements.json</span>
+  <span class="fn">visible</span>: <span class="nb">true</span>,
+
+  <span class="cm">// URL template — {varName} placeholders are replaced by values from the API JSON.</span>
+  <span class="cm">// Set to null to use the value from API_MAPPING.values.qrCode instead.</span>
+  <span class="fn">url</span>: <span class="str">"https://altered-db.com/card/{reference}"</span>,
+
+  <span class="cm">// Variable definitions: varName → dot-path into the API JSON.</span>
+  <span class="fn">vars</span>: {
+    <span class="fn">reference</span>: <span class="str">"reference"</span>,             <span class="cm">// apiJson.reference</span>
+    <span class="cm">// locale: "forge.lang",            // apiJson.forge.lang</span>
+    <span class="cm">// set:    "set.reference",          // apiJson.set.reference</span>
+  },
+};</code></pre>
+
+<p>
+  To add a custom variable, add an entry to <code>vars</code> — the key is the placeholder name
+  used in <code>url</code>, and the value is a dot-path into the API JSON:
+</p>
+
+<pre><code><span class="cm">// Example: use the set code in the URL</span>
+<span class="fn">vars</span>: {
+  <span class="fn">reference</span>: <span class="str">"reference"</span>,
+  <span class="fn">set</span>:       <span class="str">"set.reference"</span>,
+},
+<span class="fn">url</span>: <span class="str">"https://mysite.com/cards/{set}/{reference}"</span>,</code></pre>
+
+<div class="box info">
+  If a variable resolves to <code>null</code> or is missing from the API JSON,
+  its placeholder is replaced with an empty string.
+</div>
+
+<h3>Mapping format</h3>
+
+<p>
+  The default mapping is defined in the <code>API_MAPPING</code> block at the top of
+  <code>altered-card-renderer.js</code>. Each value is either a
+  <strong>dot-path string</strong> (with optional <code>{lang}</code> placeholder)
+  or a <strong>function</strong> <code>(data, lang) =&gt; value</code>.
+</p>
+
+<pre><code><span class="kw">const</span> API_MAPPING = {
+
+  <span class="cm">// Language â€” read from the forge section added by the API</span>
+  <span class="fn">lang</span>: <span class="str">"forge.lang"</span>,
+  <span class="fn">langFallback</span>: <span class="str">"en"</span>,
+
+  <span class="cm">// Frame selection â€” faction from cardGroup.faction.name.</span>
+  <span class="cm">// frameType: from forge.frameType if present, otherwise auto-selected via FRAME_AUTO_SELECT.</span>
+  <span class="cm">// collection: from forge.collection, otherwise DEFAULT_COLLECTION.</span>
+  <span class="fn">selection</span>: (d, lang) =&gt; {
+    <span class="kw">const</span> faction    = d.cardGroup?.faction?.name ?? <span class="str">""</span>;
+    <span class="kw">const</span> collection = d.forge?.collection || DEFAULT_COLLECTION;
+    <span class="kw">let</span>   frameType  = d.forge?.frameType ?? <span class="nb">null</span>;
+    <span class="kw">if</span> (!frameType) {
+      <span class="kw">const</span> rarity = d.cardRarity?.reference ?? <span class="str">""</span>;
+      <span class="kw">const</span> match  = (FRAME_AUTO_SELECT[rarity] || []).<span class="fn">find</span>(r =&gt; r.<span class="fn">test</span>(d, lang));
+      frameType    = match?.frameType ?? <span class="nb">null</span>;
+    }
+    <span class="kw">return</span> { faction, type: frameType ? `${collection}::${frameType}` : <span class="str">""</span> };
+  },
+
+  <span class="cm">// Background image</span>
+  <span class="cm">// Index into assets[] resolved from cardRarity.reference via RARITY_ASSET_INDEX.</span>
+  <span class="cm">// Falls back to imagePath (plain string or localized object) when assets[] is absent.</span>
+  <span class="fn">background</span>: (d, lang) =&gt; {
+    <span class="kw">if</span> (Array.<span class="fn">isArray</span>(d.assets) &amp;&amp; d.assets.length) {
+      <span class="kw">const</span> rarity = d.cardRarity?.reference ?? d.cardGroup?.rarity?.reference ?? <span class="str">""</span>;
+      <span class="kw">const</span> idx    = RARITY_ASSET_INDEX[rarity] ?? <span class="nb">0</span>;
+      <span class="kw">return</span> d.assets[idx] ?? d.assets[<span class="nb">0</span>] ?? <span class="nb">null</span>;
+    }
+    <span class="kw">const</span> ip = d.imagePath;
+    <span class="kw">return</span> (ip &amp;&amp; <span class="kw">typeof</span> ip === <span class="str">"object"</span>) ? (ip[lang] ?? ip.en ?? <span class="nb">null</span>) : (ip ?? <span class="nb">null</span>);
+  },
+
+  <span class="cm">// Background transform</span>
+  <span class="cm">// forge.bgTransform overrides these defaults when present in the JSON.</span>
+  <span class="fn">bgTransform</span>: (d) =&gt; ({
+    zoom:  d.forge?.bgTransform?.zoom  ?? <span class="nb">120</span>,   <span class="cm">// default zoom â€” edit here to change globally</span>
+    x:     d.forge?.bgTransform?.x     ?? <span class="nb">50</span>,
+    y:     d.forge?.bgTransform?.y     ?? <span class="nb">50</span>,
+    flipX: d.forge?.bgTransform?.flipX ?? <span class="nb">false</span>,
+  }),
+
+  <span class="cm">// Values â€” forge element id â†’ dot-path or function</span>
+  <span class="fn">values</span>: {
+    cardName:       (d, lang) =&gt; <span class="fn">_loc</span>(d.cardGroup?.name, lang),
+    handCost:       <span class="str">"cardGroup.mainCost"</span>,
+    reserveCost:    <span class="str">"cardGroup.recallCost"</span>,
+    forestValue:    <span class="str">"cardGroup.forestPower"</span>,
+    mountainValue:  <span class="str">"cardGroup.mountainPower"</span>,
+    oceanValue:     <span class="str">"cardGroup.oceanPower"</span>,
+    effects:        (d, lang) =&gt; <span class="fn">_loc</span>(d.cardGroup?.mainEffect, lang),
+    discardEffects: (d, lang) =&gt; {            <span class="cm">// echoEffect â€” array or absent</span>
+      <span class="kw">const</span> e = d.cardGroup?.echoEffect;
+      <span class="kw">if</span> (!e || (Array.<span class="fn">isArray</span>(e) &amp;&amp; e.length === <span class="nb">0</span>)) <span class="kw">return</span> <span class="nb">null</span>;
+      <span class="kw">return</span> Array.<span class="fn">isArray</span>(e) ? e.<span class="fn">map</span>(s =&gt; <span class="fn">_loc</span>(s, lang)).<span class="fn">filter</span>(Boolean).<span class="fn">join</span>(<span class="str">"\n"</span>) : <span class="fn">_loc</span>(e, lang);
+    },
+    cardId:         <span class="str">"reference"</span>,
+    <span class="cm">// qrCode — handled by API_QR_CODE block (URL template + visibility).</span>
+    <span class="cm">// Add an entry here only as fallback when API_QR_CODE.url is null.</span>
+    cardType:       (d, lang) =&gt; (d.cardGroup?.cardSubTypes || [])
+                      .<span class="fn">map</span>(s =&gt; <span class="fn">_loc</span>(s.name, lang) ?? <span class="str">""</span>).<span class="fn">join</span>(<span class="str">", "</span>),
+    artistName:     <span class="str">"cardGroup.illustrator"</span>,
+  },
+};</code></pre>
+
+<div class="box info">
+  If a field resolves to <code>null</code> or <code>undefined</code>, the element is
+  <strong>hidden entirely</strong> on the card. It is never replaced by a default value.
+</div>
+
+<h3>Text token substitution</h3>
+
+<p>
+  Effect text from external APIs often uses shorthand tokens like <code>{R}</code> or
+  <code>[]</code>. The renderer converts these to the corresponding
+  <strong>alteredicons font characters</strong> before drawing on canvas.
+  The mapping is defined in the <code>API_TEXT_TOKENS</code> block at the top of
+  <code>altered-card-renderer.js</code>:
+</p>
+
+<p>
+  Each entry can be a plain string (PUA character) or an object with an optional
+  <code>size</code> multiplier that scales the icon relative to the surrounding text:
+</p>
+
+<pre><code><span class="kw">const</span> API_TEXT_TOKENS = {
+  <span class="cm">// Plain string â€” drawn at the default icon size</span>
+  <span class="str">"{R}"</span>: <span class="str">"\ue024"</span>,
+
+  <span class="cm">// Object â€” char + size multiplier (0.8 = 80% of current fontSize)</span>
+  <span class="str">"{R}"</span>: { <span class="fn">char</span>: <span class="str">"\ue024"</span>, <span class="fn">size</span>: <span class="nb">0.8</span> },
+
+  <span class="cm">// All action/keyword icons default to 0.8 â€” adjust per-token as needed</span>
+  <span class="str">"{J}"</span>: { <span class="fn">char</span>: <span class="str">"\ue026"</span>, <span class="fn">size</span>: <span class="nb">0.8</span> },   <span class="cm">// Expend</span>
+  <span class="cm">// â€¦ number icons {0}â€“{9}, lowercase variantsâ€¦</span>
+  <span class="str">"[]"</span>:  <span class="str">" "</span>,       <span class="cm">// section separator â†’ space (no size needed)</span>
+};</code></pre>
+
+<p>
+  The <code>size</code> multiplier only applies to richtext elements â€” plain text fields
+  (card name, typeâ€¦) are unaffected. Add or remove entries to match your API's notation.
+</p>
+
+<h3>API_TEXT_TRANSFORMS â€” regex styling</h3>
+
+<p>
+  After token substitution, the renderer applies a second pass of
+  <strong>regex-based HTML transformations</strong> on richtext elements
+  (effect text, discard effect, permanent text, lore text).
+  This lets you style portions of the API text â€” bold keywords, coloured
+  highlights, italic flavour text â€” without any changes to the API itself.
+</p>
+<p>
+  The transforms are defined in the <code>API_TEXT_TRANSFORMS</code> block
+  at the top of <code>altered-card-renderer.js</code>:
+</p>
+
+<pre><code><span class="kw">const</span> API_TEXT_TRANSFORMS = [
+  <span class="cm">// #text# â†’ coloured highlight (Altered gold)</span>
+  { pattern: <span class="str">/#(.*?)#/g</span>,       replacement: <span class="str">'&lt;span style="color:#C37424"&gt;$1&lt;/span&gt;'</span> },
+  <span class="cm">// {X} â†’ large bold X (variable cost)</span>
+  { pattern: <span class="str">/\{X\}/g</span>,         replacement: <span class="str">'&lt;strong&gt;X&lt;/strong&gt;'</span> },
+  <span class="cm">// (text) â†’ italic inside parens</span>
+  { pattern: <span class="str">/\(([^)]+)\)/g</span>,   replacement: <span class="str">'(&lt;em&gt;$1&lt;/em&gt;)'</span> },
+  <span class="cm">// [[text]] â†’ bold + underline (keyword link)</span>
+  { pattern: <span class="str">/\[\[(.*?)\]\]/g</span>, replacement: <span class="str">'&lt;strong&gt;&lt;u&gt;$1&lt;/u&gt;&lt;/strong&gt;'</span> },
+  <span class="cm">// [text] â†’ bold (keyword)</span>
+  { pattern: <span class="str">/\[(.*?)\]/g</span>,     replacement: <span class="str">'&lt;strong&gt;$1&lt;/strong&gt;'</span> },
+  <span class="cm">// em dash â†’ hyphen</span>
+  { pattern: <span class="str">/â€”/g</span>,             replacement: <span class="str">'-'</span> },
+  <span class="cm">// double space â†’ line break</span>
+  { pattern: <span class="str">/  /g</span>,            replacement: <span class="str">'\n'</span> },
+];</code></pre>
+
+<p>
+  The resulting string is parsed as HTML â€” <code>&lt;strong&gt;</code>,
+  <code>&lt;em&gt;</code>, <code>&lt;u&gt;</code>, and
+  <code>&lt;span style="color:â€¦"&gt;</code> are all supported by the
+  richtext renderer. Transforms run <em>after</em> token substitution and
+  only on richtext elements; plain text fields (card name, card type, etc.)
+  are unaffected.
+</p>
+
+<h3>Missing values</h3>
+
+<p>
+  If a field listed in <code>values</code> does not exist in the API JSON
+  (the dot-path resolves to <code>null</code> or <code>undefined</code>),
+  the corresponding element is <strong>hidden entirely</strong>
+  (<code>visible: false</code>). It is never replaced by a config default.
+</p>
+<p>
+  For example, if <code>artistName</code> is mapped but the API does not return
+  an illustrator field, the artist name element will simply not appear on the card.
+</p>
+
+<h3>Usage example</h3>
+
+<pre><code><span class="cm">// Raw response from an external API</span>
+<span class="kw">const</span> apiResponse = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"https://api.example.com/cards/ALT_CORE_B_AX_04_U_10"</span>)
+  .<span class="fn">then</span>(r =&gt; r.<span class="fn">json</span>());
+
+<span class="kw">const</span> slot = document.<span class="fn">createElement</span>(<span class="str">"div"</span>);
+slot.style.width = <span class="str">"280px"</span>;
+document.body.<span class="fn">appendChild</span>(slot);
+
+<span class="cm">// Uses the API_MAPPING block from altered-card-renderer.js by default</span>
+<span class="kw">await</span> <span class="fn">AlteredRender</span>.<span class="fn">mountFromApi</span>(slot, apiResponse);</code></pre>
+
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<h2>CORS &amp; PHP proxy</h2>
+
+<p>
+  Browsers block cross-origin image and API requests. If your page and the
+  card API / image CDN are on different domains, you can use a server-side
+  proxy to relay requests from the same origin.
+</p>
+<p>
+  The file <code>altered-card-renderer-proxy.php</code> (placed alongside <code>altered-card-renderer.js</code>) handles both:
+</p>
+
+<table>
+  <tr><th>Usage</th><th>Description</th></tr>
+  <tr>
+    <td><code>altered-card-renderer-proxy.php?ref=ALT_CORE_B_AX_04_U_10&amp;locale=fr</code></td>
+    <td>Fetches and returns the card JSON from the upstream API.</td>
+  </tr>
+  <tr>
+    <td><code>altered-card-renderer-proxy.php?img=https://s3.amazonaws.com/â€¦/card.jpg</code></td>
+    <td>Fetches and returns an image (whitelisted domains only). Use this to replace <code>assets[]</code> URLs before passing to <code>mountFromApi()</code>.</td>
+  </tr>
+</table>
+
+<pre><code><span class="cm">// Transform assets[] through the proxy before rendering:</span>
+<span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"altered-card-renderer-proxy.php?ref=ALT_CORE_B_AX_04_U_10&amp;locale=fr"</span>).<span class="fn">then</span>(r =&gt; r.<span class="fn">json</span>());
+<span class="kw">if</span> (Array.<span class="fn">isArray</span>(data.assets))
+  data.assets = data.assets.<span class="fn">map</span>(u =&gt; <span class="str">`altered-card-renderer-proxy.php?img=${<span class="fn">encodeURIComponent</span>(u)}`</span>);
+data.forge = { frameType: <span class="str">"char_u_1"</span> }; <span class="cm">// forge.lang injected automatically by the proxy</span>
+<span class="kw">await</span> <span class="fn">AlteredRender</span>.<span class="fn">mountFromApi</span>(slot, data);</code></pre>
+
+<div class="box info">
+  The card API URL is configured once in <code>RESOURCES.cardApiUrl</code> in the renderer and passed to the proxy automatically.
+  Both image and API domains are validated against whitelists (<code>$ALLOWED_IMG_DOMAINS</code>, <code>$ALLOWED_API_DOMAINS</code>)
+  at the top of <code>altered-card-renderer-proxy.php</code> to prevent SSRF attacks.
+</div>
+
+<h2>Files</h2>
+
+<table>
+  <tr><th>File</th><th>Role</th></tr>
+  <tr><td><code>../altered-card-renderer.js</code></td><td>Shared renderer. Include via <code>&lt;script&gt;</code>. Configure API URL and proxy in <code>RESOURCES</code> at the top.</td></tr>
+  <tr><td><code>../altered-card-renderer-proxy.php</code></td><td>PHP proxy for card JSON and images (CORS bypass). Placed alongside the renderer.</td></tr>
+  <tr><td><code>index.html</code></td><td>Interactive demo with JSON drop zone.</td></tr>
+  <tr><td><code>altered-card-renderer-example.html</code></td><td>Minimal usage example with live API cards.</td></tr>
+  <tr><td><code>altered-card-renderer-card.json</code></td><td>Sample card JSON — shows the expected API response format.</td></tr>
+  <tr><td><code>altered-card-renderer-readme.html</code></td><td>This documentation.</td></tr>
+</table>
+
+</body>
+</html>
