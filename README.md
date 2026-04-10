@@ -9,7 +9,7 @@ No build step, no framework, no dependencies.
 
 ---
 
-## Embed anywhere — one tag
+## Embed anywhere with only one tag
 
 The simplest way to display cards on any page. Drop the `<script>` tag, then use `<altered-card>` wherever you want — in articles, CMS templates, static pages, anywhere.
 
