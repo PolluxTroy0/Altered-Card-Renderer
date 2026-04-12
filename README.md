@@ -116,17 +116,18 @@ The `RESOURCES` object at the top of the file centralises all configurable paths
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `configBaseUrl` | `https://img.altered-db.com/forge/` | Root URL for card config files (positions, frames, fonts…). See note below. |
+| `configBaseUrl` | `""` *(built)* / `https://img.altered-db.com/forge/` *(source)* | Root URL for config files and assets. In the self-hosted build the config is embedded and assets are local, so this is `""`. See note below. |
 | `cardApiUrl` | `https://altered-core-cards-api.toxicity.be/…` | Card data API. `{ref}` and `{locale}` are substituted at runtime. |
 | `proxyUrl` | `null` | Proxy mode: `null` = auto-detect (`altered-card-renderer-proxy.php` next to the script), `false` = no proxy (API called directly, requires CORS), `"https://…"` = explicit URL. |
-| `configIndex` | `config/index.json` | Path to the config index (relative to `configBaseUrl`). |
-| `alteredIconsCss` | `alteredicons.css` | Path to the Altered icon font (relative to `configBaseUrl`). |
+| `configIndex` | `config/index.json` | Path to the config index (relative to `configBaseUrl`). Unused when `embeddedConfig` is set. |
+| `alteredIconsCss` | `assets/fonts/alteredicons.css` | Path to the Altered icon font (relative to `configBaseUrl`). |
 | `qrcodeLib` | `assets/vendor/qrcodejs/qrcode.min.js` | Path to QRCode.js (relative to `configBaseUrl`, or absolute URL). |
 | `useApiBackground` | `true` | `true` = use the image URL returned by the API. `false` = use a custom URL template (see `backgroundUrl`). |
 | `backgroundUrl` | `""` | URL template used when `useApiBackground` is `false`. Variables: `{ref}`, `{locale}`, `{faction}` (AX, BR…), `{rarity}` (C, R, U, E), `{set}` (CORE, EOLE…), `{id}`. Browse available images at [img.altered-db.com](https://img.altered-db.com). |
 | `backgroundUrlIdTransform` | `null` | Optional regex transforms applied to `{id}` before URL substitution. Array of `[regexPattern, replacement]` pairs applied in order. Used when the asset filenames differ from the card reference. Example: `[["_U_\\d+$", "_U"]]` strips the collector number from unique cards (`ALT_CORE_B_AX_07_U_1698` → `ALT_CORE_B_AX_07_U`). Set to `null` to disable. |
+| `embeddedConfig` | `null` | When non-null, the renderer skips all config fetches and uses this object directly. Set automatically by the build script — do not edit by hand. |
 
-> **Note — `configBaseUrl`:** The default value points to `https://img.altered-db.com/forge/`, which hosts all the card config files and assets: element positions, frame images, fonts, biome images, set logos, and more. This CDN serves these files with `Access-Control-Allow-Origin: *`, so the renderer can be embedded on any domain without CORS issues.
+> **Note — `configBaseUrl`:** In the self-hosted build (this repository), `configBaseUrl` is `""` because the card config is embedded directly in the JS and all assets are served from the same folder. If you load the renderer from jsDelivr or the source file directly, `configBaseUrl` defaults to `https://img.altered-db.com/forge/` — a CDN that hosts all config files and assets with `Access-Control-Allow-Origin: *`.
 
 ### In `altered-card-renderer-proxy.php`
 
@@ -142,13 +143,19 @@ Two variables at the top of the file:
 
 ## Files
 
-| File | Description |
+| File / Folder | Description |
 |------|-------------|
-| `altered-card-renderer.js` | The renderer — also registers the `<altered-card>` custom element |
+| `altered-card-renderer.js` | The renderer — card config embedded, registers the `<altered-card>` custom element |
 | `altered-card-renderer-proxy.php` | PHP proxy — bypasses CORS for API calls and image fetches |
-| `altered-card-renderer-example.html` | Live demo — 6 cards rendered side by side |
+| `altered-card-renderer-example.html` | Live demo — cards rendered side by side |
 | `altered-card-renderer-card.json` | Sample card JSON — shows the expected API response format |
 | `altered-card-renderer-readme.html` | **Full documentation** |
+| `assets/fonts/` | Card fonts (HapticPro, Jali) + `alteredicons.css` (Altered icon font, base64 embedded) |
+| `assets/frames/` | Frame PNGs/SVGs — `OFFICIAL/` and `COMMUNITY/`, organised by faction |
+| `assets/biomes/` | Biome badge images |
+| `assets/logos/` | Set logos and QR code logo |
+| `assets/img/` | Placeholder background shown while images load |
+| `assets/vendor/qrcodejs/` | QRCode.js library (self-hosted, no CDN dependency) |
 
 ---
 

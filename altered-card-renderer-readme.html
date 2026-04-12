@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Altered Card Renderer â€” Documentation</title>
+  <title>Altered Card Renderer — Documentation</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -152,7 +152,7 @@
 <pre><code><span class="kw">const</span> RESOURCES = {
   configBaseUrl:    <span class="str">"https://img.altered-db.com/forge/"</span>,       <span class="cm">// forge base URL (CDN, CORS: *)</span>
   configIndex:      <span class="str">"config/index.json"</span>,                       <span class="cm">// config manifest</span>
-  alteredIconsCss:  <span class="str">"alteredicons.css"</span>,                         <span class="cm">// Altered icon font</span>
+  alteredIconsCss:  <span class="str">"assets/fonts/alteredicons.css"</span>,             <span class="cm">// Altered icon font</span>
   qrcodeLib:        <span class="str">"assets/vendor/qrcodejs/qrcode.min.js"</span>,    <span class="cm">// QR code library</span>
   cardApiUrl:       <span class="str">"https://…/cards/{ref}?locale={locale}"</span>,   <span class="cm">// card data API</span>
   proxyUrl:         <span class="nb">null</span>,                                       <span class="cm">// null | false | "https://…"</span>
@@ -202,9 +202,9 @@
 </table>
 <p>Returns a <code>Promise</code> resolved with <code>{ canvas, state, redraw }</code>:</p>
 <ul>
-  <li><code>canvas</code> â€” the created <code>&lt;canvas&gt;</code> element</li>
-  <li><code>state</code> â€” internal card state (for advanced read/write)</li>
-  <li><code>redraw()</code> â€” re-renders the card (useful if you update <code>state.values</code> manually)</li>
+  <li><code>canvas</code> — the created <code>&lt;canvas&gt;</code> element</li>
+  <li><code>state</code> — internal card state (for advanced read/write)</li>
+  <li><code>redraw()</code> — re-renders the card (useful if you update <code>state.values</code> manually)</li>
 </ul>
 
 
@@ -220,7 +220,7 @@
   <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
   <tr><td><code>container</code></td><td>HTMLElement</td><td>Target element.</td></tr>
   <tr><td><code>apiJson</code></td><td>object</td><td>Raw JSON returned by the external API.</td></tr>
-  <tr><td><code>mapping</code></td><td>object</td><td>Field mapping descriptor (see below). Optional â€” defaults to <code>API_MAPPING</code>.</td></tr>
+  <tr><td><code>mapping</code></td><td>object</td><td>Field mapping descriptor (see below). Optional — defaults to <code>API_MAPPING</code>.</td></tr>
   <tr><td><code>options</code></td><td>object</td><td>Same keys as <code>init()</code>, optional.</td></tr>
 </table>
 <p>Returns the same <code>Promise&lt;{ canvas, state, redraw }&gt;</code> as <code>mount()</code>.</p>
@@ -235,30 +235,30 @@
 </p>
 
 <pre><code>{
-  <span class="cm">// forge section is optional â€” omit entirely if defaults are correct</span>
+  <span class="cm">// forge section is optional — omit entirely if defaults are correct</span>
   <span class="str">"forge"</span>: {
     <span class="str">"frameType"</span>:  <span class="str">"char_u_1"</span>,        <span class="cm">// override auto-selected frame (FRAME_AUTO_SELECT)</span>
     <span class="str">"collection"</span>: <span class="str">"official"</span>,        <span class="cm">// override DEFAULT_COLLECTION in altered-card-renderer.js</span>
     <span class="str">"qrCode"</span>:     <span class="nb">true</span>,              <span class="cm">// show QR code (hidden by default)</span>
     <span class="str">"bgTransform"</span>: {                   <span class="cm">// override background positioning</span>
-      <span class="str">"zoom"</span>:  <span class="nb">130</span>,                  <span class="cm">// % â€” crops into image (default: 120)</span>
+      <span class="str">"zoom"</span>:  <span class="nb">130</span>,                  <span class="cm">// % — crops into image (default: 120)</span>
       <span class="str">"x"</span>:     <span class="nb">60</span>,                   <span class="cm">// horizontal focal point in % (default: 50)</span>
       <span class="str">"y"</span>:     <span class="nb">30</span>,                   <span class="cm">// vertical focal point in % (default: 50)</span>
       <span class="str">"flipX"</span>: <span class="nb">true</span>                  <span class="cm">// mirror horizontally (default: false)</span>
     }
   },
-  <span class="cm">// All other fields come from the API as-is â€” no duplication needed:</span>
+  <span class="cm">// All other fields come from the API as-is — no duplication needed:</span>
   <span class="str">"cardGroup"</span>: {
-    <span class="str">"faction"</span>: { <span class="str">"name"</span>: <span class="str">"Axiom"</span> },  <span class="cm">// â†’ faction resolved automatically</span>
-    <span class="str">"name"</span>: { <span class="str">"en"</span>: <span class="str">"Kelon Elemental"</span>, <span class="str">"fr"</span>: <span class="str">"Ã‰lÃ©mentaire de KÃ©lon"</span> },
-    <span class="cm">// â€¦</span>
+    <span class="str">"faction"</span>: { <span class="str">"name"</span>: <span class="str">"Axiom"</span> },  <span class="cm">// → faction resolved automatically</span>
+    <span class="str">"name"</span>: { <span class="str">"en"</span>: <span class="str">"Kelon Elemental"</span>, <span class="str">"fr"</span>: <span class="str">"Ã‰lémentaire de Kélon"</span> },
+    <span class="cm">// …</span>
   },
-  <span class="str">"cardRarity"</span>: { <span class="str">"reference"</span>: <span class="str">"UNIQUE"</span> },  <span class="cm">// â†’ selects assets[2]</span>
-  <span class="str">"set"</span>: { <span class="str">"reference"</span>: <span class="str">"CORE"</span> },           <span class="cm">// â†’ matches setLogos[].code in ui.json</span>
+  <span class="str">"cardRarity"</span>: { <span class="str">"reference"</span>: <span class="str">"UNIQUE"</span> },  <span class="cm">// → selects assets[2]</span>
+  <span class="str">"set"</span>: { <span class="str">"reference"</span>: <span class="str">"CORE"</span> },           <span class="cm">// → matches setLogos[].code in ui.json</span>
   <span class="str">"assets"</span>: [
-    <span class="str">"https://â€¦/Card_C_WEB.webp"</span>,   <span class="cm">// 0 â€” Common</span>
-    <span class="str">"https://â€¦/Card_R_WEB.webp"</span>,   <span class="cm">// 1 â€” Rare</span>
-    <span class="str">"https://â€¦/Card_U_WEB.webp"</span>    <span class="cm">// 2 â€” Unique  â† auto-selected</span>
+    <span class="str">"https://…/Card_C_WEB.webp"</span>,   <span class="cm">// 0 — Common</span>
+    <span class="str">"https://…/Card_R_WEB.webp"</span>,   <span class="cm">// 1 — Rare</span>
+    <span class="str">"https://…/Card_U_WEB.webp"</span>    <span class="cm">// 2 — Unique  â† auto-selected</span>
   ]
 }</code></pre>
 
@@ -268,14 +268,14 @@
   <tr><td><code>forge.frameType</code></td><td>Override the frame auto-selection (<code>FRAME_AUTO_SELECT</code> in <code>altered-card-renderer.js</code>). If absent, the frame is chosen automatically based on rarity and card content.</td></tr>
   <tr><td><code>forge.collection</code></td><td>Override the frame collection. Defaults to <code>DEFAULT_COLLECTION</code> in <code>altered-card-renderer.js</code> (<code>"official"</code>).</td></tr>
   <tr><td><code>forge.bgTransform</code></td><td>If absent, defaults from <code>API_MAPPING</code> apply (<code>zoom: 120, x: 50, y: 50, flipX: false</code>). Individual sub-fields can be omitted.</td></tr>
-  <tr><td><code>forge.bgTransform.zoom</code></td><td>Background zoom in % â€” values above 100 crop into the image. Default: <code>120</code>.</td></tr>
+  <tr><td><code>forge.bgTransform.zoom</code></td><td>Background zoom in % — values above 100 crop into the image. Default: <code>120</code>.</td></tr>
   <tr><td><code>forge.bgTransform.x</code></td><td>Horizontal focal point in % (0 = left, 50 = center, 100 = right). Default: <code>50</code>.</td></tr>
   <tr><td><code>forge.bgTransform.y</code></td><td>Vertical focal point in % (0 = top, 50 = center, 100 = bottom). Default: <code>50</code>.</td></tr>
   <tr><td><code>forge.bgTransform.flipX</code></td><td>Mirror the background image horizontally. Default: <code>false</code>.</td></tr>
   <tr><td><code>forge.qrCode</code></td><td><code>true</code> = display the QR code (using <code>qrUrlDetail</code> from the API). Absent or <code>false</code> = hidden.</td></tr>
-  <tr><td colspan="3" style="background:#1a2030;color:#6699cc;font-size:.8rem;padding:.4rem .6rem"><strong>Auto-detected from regular API fields â€” no forge field needed</strong></td></tr>
-  <tr><td><code>cardGroup.faction.name</code></td><td>auto</td><td>Faction name used to select the frame config (<code>"Axiom"</code>, <code>"Bravos"</code>, <code>"Lyra"</code>, <code>"Muna"</code>, <code>"Ordis"</code>, <code>"Yzmir"</code>â€¦).</td></tr>
-  <tr><td><code>cardRarity.reference</code></td><td>auto</td><td>Selects the background image from <code>assets[]</code> via <code>RARITY_ASSET_INDEX</code> in <code>altered-card-renderer.js</code>: <code>COMMON</code>â†’0, <code>RARE</code>â†’1, <code>UNIQUE</code>â†’2. Falls back to <code>imagePath.{lang}</code> if <code>assets[]</code> is absent.</td></tr>
+  <tr><td colspan="3" style="background:#1a2030;color:#6699cc;font-size:.8rem;padding:.4rem .6rem"><strong>Auto-detected from regular API fields — no forge field needed</strong></td></tr>
+  <tr><td><code>cardGroup.faction.name</code></td><td>auto</td><td>Faction name used to select the frame config (<code>"Axiom"</code>, <code>"Bravos"</code>, <code>"Lyra"</code>, <code>"Muna"</code>, <code>"Ordis"</code>, <code>"Yzmir"</code>…).</td></tr>
+  <tr><td><code>cardRarity.reference</code></td><td>auto</td><td>Selects the background image from <code>assets[]</code> via <code>RARITY_ASSET_INDEX</code> in <code>altered-card-renderer.js</code>: <code>COMMON</code>→0, <code>RARE</code>→1, <code>UNIQUE</code>→2. Falls back to <code>imagePath.{lang}</code> if <code>assets[]</code> is absent.</td></tr>
   <tr><td><code>set.reference</code></td><td>auto</td><td>Matched against the set logo list to select the set logo image automatically. No match = no logo shown.</td></tr>
 </table>
 
@@ -284,25 +284,25 @@
 <p>
   When <code>forge.frameType</code> is absent, the renderer picks the frame automatically
   using <code>FRAME_AUTO_SELECT</code> in <code>altered-card-renderer.js</code>.
-  Rules are defined per rarity code and evaluated in order â€” the first matching rule wins.
+  Rules are defined per rarity code and evaluated in order — the first matching rule wins.
 </p>
 
 <pre><code><span class="kw">const</span> FRAME_AUTO_SELECT = {
   <span class="str">"UNIQUE"</span>: [
-    <span class="cm">// _eff1(d, l) â†’ length of cardGroup.mainEffect text</span>
-    <span class="cm">// _eff2(d)    â†’ true if cardGroup.echoEffect is non-empty</span>
+    <span class="cm">// _eff1(d, l) → length of cardGroup.mainEffect text</span>
+    <span class="cm">// _eff2(d)    → true if cardGroup.echoEffect is non-empty</span>
     { <span class="fn">frameType</span>: <span class="str">"char_u_1"</span>, <span class="fn">test</span>: (d, l) =&gt;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">100</span> },
     { <span class="fn">frameType</span>: <span class="str">"char_u_2"</span>, <span class="fn">test</span>: (d, l) =&gt;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">100</span> },
     { <span class="fn">frameType</span>: <span class="str">"char_u_3"</span>, <span class="fn">test</span>: (d, l) =&gt; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">100</span> },
     { <span class="fn">frameType</span>: <span class="str">"char_u_4"</span>, <span class="fn">test</span>: (d, l) =&gt; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">100</span> },
   ],
-  <span class="cm">// "COMMON": [ â€¦ ],</span>
-  <span class="cm">// "RARE":   [ â€¦ ],</span>
+  <span class="cm">// "COMMON": [ … ],</span>
+  <span class="cm">// "RARE":   [ … ],</span>
 };</code></pre>
 
 <div class="box info">
   <code>mainEffect</code> is the card's main effect text (<code>cardGroup.mainEffect</code>).
-  <code>echoEffect</code> is the discard/echo effect (<code>cardGroup.echoEffect</code> â€” an array;
+  <code>echoEffect</code> is the discard/echo effect (<code>cardGroup.echoEffect</code> — an array;
   empty array = no echo effect). The 100-character threshold and frame IDs are fully
   configurable directly in the block.
 </div>
@@ -316,9 +316,9 @@
   biome values returned by the API:
 </p>
 <ul>
-  <li>value <code>== 0</code> â†’ <code>"zero"</code></li>
-  <li>value <code>== highest</code> among the three biomes â†’ <code>"best"</code> (ties: all tied biomes get <code>"best"</code>)</li>
-  <li>otherwise â†’ <code>"normal"</code></li>
+  <li>value <code>== 0</code> → <code>"zero"</code></li>
+  <li>value <code>== highest</code> among the three biomes → <code>"best"</code> (ties: all tied biomes get <code>"best"</code>)</li>
+  <li>otherwise → <code>"normal"</code></li>
 </ul>
 <p>
   The API fields to read are declared in the <code>BIOME_VARIANT_AUTO</code> block at the
@@ -333,7 +333,7 @@
 <span class="cm">// Set a value to null to disable auto-detection for that biome.</span></code></pre>
 
 <p>
-  This block is independent from <code>API_MAPPING.values</code> â€” both can reference the
+  This block is independent from <code>API_MAPPING.values</code> — both can reference the
   same API fields without conflict. For forge card JSONs (<code>mount()</code>), the
   <code>bgVariant</code> stored in the JSON is used as-is; auto-detection only applies in
   <code>mountFromApi()</code>.
@@ -393,11 +393,11 @@
 
 <pre><code><span class="kw">const</span> API_MAPPING = {
 
-  <span class="cm">// Language â€” read from the forge section added by the API</span>
+  <span class="cm">// Language — read from the forge section added by the API</span>
   <span class="fn">lang</span>: <span class="str">"forge.lang"</span>,
   <span class="fn">langFallback</span>: <span class="str">"en"</span>,
 
-  <span class="cm">// Frame selection â€” faction from cardGroup.faction.name.</span>
+  <span class="cm">// Frame selection — faction from cardGroup.faction.name.</span>
   <span class="cm">// frameType: from forge.frameType if present, otherwise auto-selected via FRAME_AUTO_SELECT.</span>
   <span class="cm">// collection: from forge.collection, otherwise DEFAULT_COLLECTION.</span>
   <span class="fn">selection</span>: (d, lang) =&gt; {
@@ -428,13 +428,13 @@
   <span class="cm">// Background transform</span>
   <span class="cm">// forge.bgTransform overrides these defaults when present in the JSON.</span>
   <span class="fn">bgTransform</span>: (d) =&gt; ({
-    zoom:  d.forge?.bgTransform?.zoom  ?? <span class="nb">120</span>,   <span class="cm">// default zoom â€” edit here to change globally</span>
+    zoom:  d.forge?.bgTransform?.zoom  ?? <span class="nb">120</span>,   <span class="cm">// default zoom — edit here to change globally</span>
     x:     d.forge?.bgTransform?.x     ?? <span class="nb">50</span>,
     y:     d.forge?.bgTransform?.y     ?? <span class="nb">50</span>,
     flipX: d.forge?.bgTransform?.flipX ?? <span class="nb">false</span>,
   }),
 
-  <span class="cm">// Values â€” forge element id â†’ dot-path or function</span>
+  <span class="cm">// Values — forge element id → dot-path or function</span>
   <span class="fn">values</span>: {
     cardName:       (d, lang) =&gt; <span class="fn">_loc</span>(d.cardGroup?.name, lang),
     handCost:       <span class="str">"cardGroup.mainCost"</span>,
@@ -443,7 +443,7 @@
     mountainValue:  <span class="str">"cardGroup.mountainPower"</span>,
     oceanValue:     <span class="str">"cardGroup.oceanPower"</span>,
     effects:        (d, lang) =&gt; <span class="fn">_loc</span>(d.cardGroup?.mainEffect, lang),
-    discardEffects: (d, lang) =&gt; {            <span class="cm">// echoEffect â€” array or absent</span>
+    discardEffects: (d, lang) =&gt; {            <span class="cm">// echoEffect — array or absent</span>
       <span class="kw">const</span> e = d.cardGroup?.echoEffect;
       <span class="kw">if</span> (!e || (Array.<span class="fn">isArray</span>(e) &amp;&amp; e.length === <span class="nb">0</span>)) <span class="kw">return</span> <span class="nb">null</span>;
       <span class="kw">return</span> Array.<span class="fn">isArray</span>(e) ? e.<span class="fn">map</span>(s =&gt; <span class="fn">_loc</span>(s, lang)).<span class="fn">filter</span>(Boolean).<span class="fn">join</span>(<span class="str">"\n"</span>) : <span class="fn">_loc</span>(e, lang);
@@ -478,31 +478,31 @@
 </p>
 
 <pre><code><span class="kw">const</span> API_TEXT_TOKENS = {
-  <span class="cm">// Plain string â€” drawn at the default icon size</span>
+  <span class="cm">// Plain string — drawn at the default icon size</span>
   <span class="str">"{R}"</span>: <span class="str">"\ue024"</span>,
 
-  <span class="cm">// Object â€” char + size multiplier (0.8 = 80% of current fontSize)</span>
+  <span class="cm">// Object — char + size multiplier (0.8 = 80% of current fontSize)</span>
   <span class="str">"{R}"</span>: { <span class="fn">char</span>: <span class="str">"\ue024"</span>, <span class="fn">size</span>: <span class="nb">0.8</span> },
 
-  <span class="cm">// All action/keyword icons default to 0.8 â€” adjust per-token as needed</span>
+  <span class="cm">// All action/keyword icons default to 0.8 — adjust per-token as needed</span>
   <span class="str">"{J}"</span>: { <span class="fn">char</span>: <span class="str">"\ue026"</span>, <span class="fn">size</span>: <span class="nb">0.8</span> },   <span class="cm">// Expend</span>
-  <span class="cm">// â€¦ number icons {0}â€“{9}, lowercase variantsâ€¦</span>
-  <span class="str">"[]"</span>:  <span class="str">" "</span>,       <span class="cm">// section separator â†’ space (no size needed)</span>
+  <span class="cm">// … number icons {0}–{9}, lowercase variants…</span>
+  <span class="str">"[]"</span>:  <span class="str">" "</span>,       <span class="cm">// section separator → space (no size needed)</span>
 };</code></pre>
 
 <p>
-  The <code>size</code> multiplier only applies to richtext elements â€” plain text fields
-  (card name, typeâ€¦) are unaffected. Add or remove entries to match your API's notation.
+  The <code>size</code> multiplier only applies to richtext elements — plain text fields
+  (card name, type…) are unaffected. Add or remove entries to match your API's notation.
 </p>
 
-<h3>API_TEXT_TRANSFORMS â€” regex styling</h3>
+<h3>API_TEXT_TRANSFORMS — regex styling</h3>
 
 <p>
   After token substitution, the renderer applies a second pass of
   <strong>regex-based HTML transformations</strong> on richtext elements
   (effect text, discard effect, permanent text, lore text).
-  This lets you style portions of the API text â€” bold keywords, coloured
-  highlights, italic flavour text â€” without any changes to the API itself.
+  This lets you style portions of the API text — bold keywords, coloured
+  highlights, italic flavour text — without any changes to the API itself.
 </p>
 <p>
   The transforms are defined in the <code>API_TEXT_TRANSFORMS</code> block
@@ -510,26 +510,26 @@
 </p>
 
 <pre><code><span class="kw">const</span> API_TEXT_TRANSFORMS = [
-  <span class="cm">// #text# â†’ coloured highlight (Altered gold)</span>
+  <span class="cm">// #text# → coloured highlight (Altered gold)</span>
   { pattern: <span class="str">/#(.*?)#/g</span>,       replacement: <span class="str">'&lt;span style="color:#C37424"&gt;$1&lt;/span&gt;'</span> },
-  <span class="cm">// {X} â†’ large bold X (variable cost)</span>
+  <span class="cm">// {X} → large bold X (variable cost)</span>
   { pattern: <span class="str">/\{X\}/g</span>,         replacement: <span class="str">'&lt;strong&gt;X&lt;/strong&gt;'</span> },
-  <span class="cm">// (text) â†’ italic inside parens</span>
+  <span class="cm">// (text) → italic inside parens</span>
   { pattern: <span class="str">/\(([^)]+)\)/g</span>,   replacement: <span class="str">'(&lt;em&gt;$1&lt;/em&gt;)'</span> },
-  <span class="cm">// [[text]] â†’ bold + underline (keyword link)</span>
+  <span class="cm">// [[text]] → bold + underline (keyword link)</span>
   { pattern: <span class="str">/\[\[(.*?)\]\]/g</span>, replacement: <span class="str">'&lt;strong&gt;&lt;u&gt;$1&lt;/u&gt;&lt;/strong&gt;'</span> },
-  <span class="cm">// [text] â†’ bold (keyword)</span>
+  <span class="cm">// [text] → bold (keyword)</span>
   { pattern: <span class="str">/\[(.*?)\]/g</span>,     replacement: <span class="str">'&lt;strong&gt;$1&lt;/strong&gt;'</span> },
-  <span class="cm">// em dash â†’ hyphen</span>
-  { pattern: <span class="str">/â€”/g</span>,             replacement: <span class="str">'-'</span> },
-  <span class="cm">// double space â†’ line break</span>
+  <span class="cm">// em dash → hyphen</span>
+  { pattern: <span class="str">/—/g</span>,             replacement: <span class="str">'-'</span> },
+  <span class="cm">// double space → line break</span>
   { pattern: <span class="str">/  /g</span>,            replacement: <span class="str">'\n'</span> },
 ];</code></pre>
 
 <p>
-  The resulting string is parsed as HTML â€” <code>&lt;strong&gt;</code>,
+  The resulting string is parsed as HTML — <code>&lt;strong&gt;</code>,
   <code>&lt;em&gt;</code>, <code>&lt;u&gt;</code>, and
-  <code>&lt;span style="color:â€¦"&gt;</code> are all supported by the
+  <code>&lt;span style="color:…"&gt;</code> are all supported by the
   richtext renderer. Transforms run <em>after</em> token substitution and
   only on richtext elements; plain text fields (card name, card type, etc.)
   are unaffected.
@@ -581,7 +581,7 @@ document.body.<span class="fn">appendChild</span>(slot);
     <td>Fetches and returns the card JSON from the upstream API.</td>
   </tr>
   <tr>
-    <td><code>altered-card-renderer-proxy.php?img=https://s3.amazonaws.com/â€¦/card.jpg</code></td>
+    <td><code>altered-card-renderer-proxy.php?img=https://s3.amazonaws.com/…/card.jpg</code></td>
     <td>Fetches and returns an image (whitelisted domains only). Use this to replace <code>assets[]</code> URLs before passing to <code>mountFromApi()</code>.</td>
   </tr>
 </table>

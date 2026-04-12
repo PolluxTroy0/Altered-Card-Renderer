@@ -22,7 +22,7 @@
     configIndex: "config/index.json",
 
     // Path to the Altered icons CSS font file (relative to configBaseUrl)
-    alteredIconsCss: "alteredicons.css",
+    alteredIconsCss: "assets/fonts/alteredicons.css",
 
     // Path to QRCode.js (relative to configBaseUrl, or absolute URL)
     qrcodeLib: "assets/vendor/qrcodejs/qrcode.min.js",
@@ -64,6 +64,11 @@
     backgroundUrlIdTransform: [
       ["_U_\\d+$", "_U"],
     ],
+
+    // Pre-built config object — set by the build script to skip all config fetches.
+    // When non-null, _loadConfig() uses this directly instead of fetching JSON files.
+    // Leave as null for normal (remote) operation.
+    embeddedConfig: null,
   };
 
   // ── API MAPPING ───────────────────────────────────────────────
@@ -587,6 +592,12 @@
   }
 
   async function _loadConfig() {
+    if (_opts.embeddedConfig) {
+      const config = _opts.embeddedConfig;
+      if (config.cardApiUrl) RESOURCES.cardApiUrl = config.cardApiUrl;
+      return config;
+    }
+
     const base     = _opts.configBaseUrl;
     const indexUrl = _resolveUrl(_opts.configIndex, base);
 
