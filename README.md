@@ -116,18 +116,27 @@ The `RESOURCES` object at the top of the file centralises all configurable paths
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `configBaseUrl` | `""` *(built)* / `https://img.altered-db.com/forge/` *(source)* | Root URL for config files and assets. In the self-hosted build the config is embedded and assets are local, so this is `""`. See note below. |
-| `cardApiUrl` | `https://altered-core-cards-api.toxicity.be/…` | Card data API. `{ref}` and `{locale}` are substituted at runtime. |
+There is also a top-level variable above `RESOURCES` for the API URL:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CARD_API_URL` | `""` *(source)* / filled at build time | Card data API URL. `{ref}` and `{locale}` are substituted at runtime. Set by `build_renderer_for_github.py` from `config/core.json`, or leave empty and provide it via `config/core.json` at runtime. |
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `configBaseUrl` | `""` *(built)* / `https://img.altered-db.com/forge/` *(source)* | Root URL for config files and assets. In the built version the config is embedded and assets are local, so this is `""`. See note below. |
 | `proxyUrl` | `null` | Proxy mode: `null` = auto-detect (`altered-card-renderer-proxy.php` next to the script), `false` = no proxy (API called directly, requires CORS), `"https://…"` = explicit URL. |
 | `configIndex` | `config/index.json` | Path to the config index (relative to `configBaseUrl`). Unused when `embeddedConfig` is set. |
 | `alteredIconsCss` | `assets/fonts/alteredicons.css` | Path to the Altered icon font (relative to `configBaseUrl`). |
 | `qrcodeLib` | `assets/vendor/qrcodejs/qrcode.min.js` | Path to QRCode.js (relative to `configBaseUrl`, or absolute URL). |
 | `useApiBackground` | `true` | `true` = use the image URL returned by the API. `false` = use a custom URL template (see `backgroundUrl`). |
 | `backgroundUrl` | `""` | URL template used when `useApiBackground` is `false`. Variables: `{ref}`, `{locale}`, `{faction}` (AX, BR…), `{rarity}` (C, R, U, E), `{set}` (CORE, EOLE…), `{id}`. Browse available images at [img.altered-db.com](https://img.altered-db.com). |
-| `backgroundUrlIdTransform` | `null` | Optional regex transforms applied to `{id}` before URL substitution. Array of `[regexPattern, replacement]` pairs applied in order. Used when the asset filenames differ from the card reference. Example: `[["_U_\\d+$", "_U"]]` strips the collector number from unique cards (`ALT_CORE_B_AX_07_U_1698` → `ALT_CORE_B_AX_07_U`). Set to `null` to disable. |
-| `embeddedConfig` | `null` | When non-null, the renderer skips all config fetches and uses this object directly. Set automatically by the build script — do not edit by hand. |
+| `backgroundUrlIdTransform` | `null` | Optional regex transforms applied to `{id}` before URL substitution. Array of `[regexPattern, replacement]` pairs applied in order. Example: `[["_U_\\d+$", "_U"]]` strips the collector number from unique cards (`ALT_CORE_B_AX_07_U_1698` → `ALT_CORE_B_AX_07_U`). Set to `null` to disable. |
+| `embeddedConfig` | `null` | When non-null, **takes full priority** — no config files are fetched. Set by the build script. To force external JSON files instead, pass `embeddedConfig: null` explicitly to `AlteredRender.init()`. |
 
-> **Note — `configBaseUrl`:** In the self-hosted build (this repository), `configBaseUrl` is `""` because the card config is embedded directly in the JS and all assets are served from the same folder. If you load the renderer from jsDelivr or the source file directly, `configBaseUrl` defaults to `https://img.altered-db.com/forge/` — a CDN that hosts all config files and assets with `Access-Control-Allow-Origin: *`.
+> **Note — config priority:** `embeddedConfig` always takes precedence over `configBaseUrl`. In the built version, config is embedded and no JSON files are fetched. To override with external config files at runtime, pass `{ embeddedConfig: null, configBaseUrl: "https://…" }` to `AlteredRender.init()`.
+
+> **Note — `configBaseUrl`:** In the built version, `configBaseUrl` is `""` because assets are served from the same folder. If you load the renderer from jsDelivr or the source file directly, `configBaseUrl` defaults to `https://img.altered-db.com/forge/` — a CDN with `Access-Control-Allow-Origin: *`.
 
 ### In `altered-card-renderer-proxy.php`
 

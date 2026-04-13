@@ -184,7 +184,7 @@
   backgroundUrl:    <span class="str">""</span>,    <span class="cm">// template: {ref} {locale} {faction} {rarity} {set} {id} — see img.altered-db.com</span>
   backgroundUrlIdTransform: <span class="nb">null</span>, <span class="cm">// [[regexPattern, replacement], …] applied to {id} before URL substitution — null to disable</span>
                             <span class="cm">// e.g. [["_U_\\d+$", "_U"]] → ALT_CORE_B_AX_07_U_1698 becomes ALT_CORE_B_AX_07_U</span>
-  embeddedConfig:   <span class="nb">null</span>,  <span class="cm">// set by build script — when non-null, no config fetch is performed</span>
+  embeddedConfig:   <span class="nb">null</span>,  <span class="cm">// set by build script — when non-null, takes full priority over configBaseUrl</span>
 };</code></pre>
 
 <p>
@@ -193,8 +193,15 @@
   are used as-is.
 </p>
 
+<div class="box warning">
+  <strong>Config priority:</strong> <code>embeddedConfig</code> always takes precedence over <code>configBaseUrl</code>.
+  In the built version, config is embedded and no JSON files are fetched at startup.
+  To force external JSON files instead, pass <code>embeddedConfig: null</code> explicitly to <code>AlteredRender.init()</code>:
+<pre><code>AlteredRender.init({ embeddedConfig: <span class="nb">null</span>, configBaseUrl: <span class="str">"https://my-server.com/config/"</span> });</code></pre>
+</div>
+
 <div class="box tip">
-  To customise the API URL, edit <code>CARD_API_URL</code> directly at the top of the file —
+  To customise the API URL, edit <code>CARD_API_URL</code> at the top of the file —
   no need to touch anything else.
 </div>
 
