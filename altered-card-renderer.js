@@ -150,15 +150,84 @@
     return clean.length;
   }
   function _eff2(d)    { const e = d.echoEffect; return Array.isArray(e) ? e.length > 0 : !!e; }
+  // Returns the cardType.reference string (e.g. "CHARACTER", "PERMANENT", "SPELL", "TOKEN", "HERO").
+  function _type(d)    { return d.cardType?.reference ?? ""; }
+  // Returns true if any entry in cardSubTypes has the given reference (e.g. "EXPEDITION").
+  function _subtype(d, ref) { return (d.cardSubTypes ?? []).some(s => s.reference === ref); }
 
   const FRAME_AUTO_SELECT = {
-    "UNIQUE": [
-      // The 200-character threshold separates "short" from "long" main effect text,
-      // measured in visible characters (after stripping API tokens and markup).
-      // Below 200 chars fits comfortably in the small effect zone (char_u_1 / char_u_3).
-      // At 200+ chars the text needs the larger zone (char_u_2 / char_u_4).
-      // Adjust this value if your cards use a different font size or text area size.
+    // ── COMMON ────────────────────────────────────────────────────────
+    // cardType.reference drives the prefix (char / perm / expperm / spell / tok / hero).
+    // For PERMANENT: sub-type "EXPEDITION" selects the expperm_ frames.
+    // TOKEN and HERO have a single frame variant each.
+    // CHARACTER is the catch-all fallback (no _type() guard on the last four rules).
+    "COMMON": [
+      // TOKEN — single variant
+      { frameType: "tok_c_1",     test: (d)    => _type(d) === "TOKEN" },
+      // HERO — single variant
+      { frameType: "hero_c_1",    test: (d)    => _type(d) === "HERO" },
+      // EXPEDITION PERMANENT
+      { frameType: "expperm_c_1", test: (d, l) => _type(d) === "PERMANENT" && _subtype(d, "EXPEDITION") &&  _eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "expperm_c_2", test: (d, l) => _type(d) === "PERMANENT" && _subtype(d, "EXPEDITION") &&  _eff2(d) && _eff1(d, l) >= 200 },
+      { frameType: "expperm_c_3", test: (d, l) => _type(d) === "PERMANENT" && _subtype(d, "EXPEDITION") && !_eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "expperm_c_4", test: (d, l) => _type(d) === "PERMANENT" && _subtype(d, "EXPEDITION") && !_eff2(d) && _eff1(d, l) >= 200 },
+      // PERMANENT
+      { frameType: "perm_c_1",    test: (d, l) => _type(d) === "PERMANENT" &&  _eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "perm_c_2",    test: (d, l) => _type(d) === "PERMANENT" &&  _eff2(d) && _eff1(d, l) >= 200 },
+      { frameType: "perm_c_3",    test: (d, l) => _type(d) === "PERMANENT" && !_eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "perm_c_4",    test: (d, l) => _type(d) === "PERMANENT" && !_eff2(d) && _eff1(d, l) >= 200 },
+      // SPELL
+      { frameType: "spell_c_1",   test: (d, l) => _type(d) === "SPELL" &&  _eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "spell_c_2",   test: (d, l) => _type(d) === "SPELL" &&  _eff2(d) && _eff1(d, l) >= 200 },
+      { frameType: "spell_c_3",   test: (d, l) => _type(d) === "SPELL" && !_eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "spell_c_4",   test: (d, l) => _type(d) === "SPELL" && !_eff2(d) && _eff1(d, l) >= 200 },
+      // CHARACTER (default — also catches any unknown type)
+      { frameType: "char_c_1",    test: (d, l) =>  _eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "char_c_2",    test: (d, l) =>  _eff2(d) && _eff1(d, l) >= 200 },
+      { frameType: "char_c_3",    test: (d, l) => !_eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "char_c_4",    test: (d, l) => !_eff2(d) && _eff1(d, l) >= 200 },
+    ],
 
+    // ── RARE ──────────────────────────────────────────────────────────
+    // Same logic as COMMON. No TOKEN / HERO frames exist at Rare rarity.
+    "RARE": [
+      // EXPEDITION PERMANENT
+      { frameType: "expperm_r_1", test: (d, l) => _type(d) === "PERMANENT" && _subtype(d, "EXPEDITION") &&  _eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "expperm_r_2", test: (d, l) => _type(d) === "PERMANENT" && _subtype(d, "EXPEDITION") &&  _eff2(d) && _eff1(d, l) >= 200 },
+      { frameType: "expperm_r_3", test: (d, l) => _type(d) === "PERMANENT" && _subtype(d, "EXPEDITION") && !_eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "expperm_r_4", test: (d, l) => _type(d) === "PERMANENT" && _subtype(d, "EXPEDITION") && !_eff2(d) && _eff1(d, l) >= 200 },
+      // PERMANENT
+      { frameType: "perm_r_1",    test: (d, l) => _type(d) === "PERMANENT" &&  _eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "perm_r_2",    test: (d, l) => _type(d) === "PERMANENT" &&  _eff2(d) && _eff1(d, l) >= 200 },
+      { frameType: "perm_r_3",    test: (d, l) => _type(d) === "PERMANENT" && !_eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "perm_r_4",    test: (d, l) => _type(d) === "PERMANENT" && !_eff2(d) && _eff1(d, l) >= 200 },
+      // SPELL
+      { frameType: "spell_r_1",   test: (d, l) => _type(d) === "SPELL" &&  _eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "spell_r_2",   test: (d, l) => _type(d) === "SPELL" &&  _eff2(d) && _eff1(d, l) >= 200 },
+      { frameType: "spell_r_3",   test: (d, l) => _type(d) === "SPELL" && !_eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "spell_r_4",   test: (d, l) => _type(d) === "SPELL" && !_eff2(d) && _eff1(d, l) >= 200 },
+      // CHARACTER (default)
+      { frameType: "char_r_1",    test: (d, l) =>  _eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "char_r_2",    test: (d, l) =>  _eff2(d) && _eff1(d, l) >= 200 },
+      { frameType: "char_r_3",    test: (d, l) => !_eff2(d) && _eff1(d, l) <  200 },
+      { frameType: "char_r_4",    test: (d, l) => !_eff2(d) && _eff1(d, l) >= 200 },
+    ],
+
+    // ── EXALTED ───────────────────────────────────────────────────────
+    // Currently only one frame variant exists (char_e_1 — Character Exalted, large effect).
+    // NOTE: confirm that cardRarity.reference is "EXALTED" in your API.
+    "EXALTED": [
+      { frameType: "char_e_1", test: () => true },
+    ],
+
+    // ── UNIQUE ────────────────────────────────────────────────────────
+    // Only Characters exist at Unique rarity — no type check needed.
+    // The 200-character threshold separates "short" from "long" main effect text,
+    // measured in visible characters (after stripping API tokens and markup).
+    // Below 200 chars fits comfortably in the small effect zone (char_u_1 / char_u_3).
+    // At 200+ chars the text needs the larger zone (char_u_2 / char_u_4).
+    // Adjust this value if your cards use a different font size or text area size.
+    "UNIQUE": [
       // Has discard effect + short main effect  (< 200 chars)  → small two-zone frame
       { frameType: "char_u_1", test: (d, l) =>  _eff2(d) && _eff1(d, l) <  200 },
       // Has discard effect + long main effect   (≥ 200 chars)  → large two-zone frame
@@ -168,9 +237,6 @@
       // No discard effect  + long main effect   (≥ 200 chars)  → single-zone large frame
       { frameType: "char_u_4", test: (d, l) => !_eff2(d) && _eff1(d, l) >= 200 },
     ],
-    // Add other rarities here as needed:
-    // "COMMON": [ ... ],
-    // "RARE":   [ ... ],
   };
   // ─────────────────────────────────────────────────────────────────
 
@@ -329,7 +395,11 @@
       },
       // qrCode — handled by API_QR_CODE block (url template + visibility).
       // Define here only as a fallback when API_QR_CODE.url is null.
-      cardType:      (d, lang) => (d.cardSubTypes || []).map(s => _loc(s.name, lang) ?? "").join(", "),
+      cardType:      (d, lang) => {
+        const type = _loc(d.cardType?.name, lang) ?? "";
+        const subs = (d.cardSubTypes || []).map(s => _loc(s.name, lang) ?? "").filter(Boolean).join(", ");
+        return subs ? `${type} - ${subs}` : type;
+      },
       artistName:    d => d.illustrator ?? "Unknown",
     },
   };
