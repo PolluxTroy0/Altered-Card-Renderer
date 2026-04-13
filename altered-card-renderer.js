@@ -9,6 +9,12 @@
   // Captured synchronously at parse time — used by the <altered-card> custom element.
   const _currentScript = document.currentScript;
 
+  // ── CARD API URL ──────────────────────────────────────────────
+  // URL of the card data API. {ref} and {locale} are substituted at runtime.
+  // Overridden at build time by build_renderer_for_github.py (value from config/core.json).
+  // Can also be set via config/core.json > cardApiUrl at runtime (non-embedded mode).
+  const CARD_API_URL = "https://altered-core-cards-api.toxicity.be/api/cards/reference/{ref}?locale={locale}";
+
   // ── EXTERNAL RESOURCES ────────────────────────────────────────
   // Edit these paths to match your deployment.
   // All relative paths resolve against configBaseUrl.
@@ -27,9 +33,8 @@
     // Path to QRCode.js (relative to configBaseUrl, or absolute URL)
     qrcodeLib: "assets/vendor/qrcodejs/qrcode.min.js",
 
-    // URL of the card data API. {ref} and {locale} are substituted at runtime.
-    // Loaded from config/core.json (cardApiUrl). Must be set there — no built-in default.
-    cardApiUrl: "",
+    // Resolved from CARD_API_URL above (set at build time or via config at runtime).
+    cardApiUrl: CARD_API_URL,
 
     // CORS proxy used by the <altered-card> custom element. Three modes:
     //   null        → auto-detect: altered-card-renderer-proxy.php next to this script (default)
