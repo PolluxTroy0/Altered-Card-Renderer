@@ -319,23 +319,44 @@
 </p>
 
 <pre><code><span class="kw">const</span> FRAME_AUTO_SELECT = {
-  <span class="str">"UNIQUE"</span>: [
-    <span class="cm">// _eff1(d, l) → length of cardGroup.mainEffect text</span>
-    <span class="cm">// _eff2(d)    → true if cardGroup.echoEffect is non-empty</span>
-    { <span class="fn">frameType</span>: <span class="str">"char_u_1"</span>, <span class="fn">test</span>: (d, l) =&gt;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">100</span> },
-    { <span class="fn">frameType</span>: <span class="str">"char_u_2"</span>, <span class="fn">test</span>: (d, l) =&gt;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">100</span> },
-    { <span class="fn">frameType</span>: <span class="str">"char_u_3"</span>, <span class="fn">test</span>: (d, l) =&gt; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">100</span> },
-    { <span class="fn">frameType</span>: <span class="str">"char_u_4"</span>, <span class="fn">test</span>: (d, l) =&gt; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">100</span> },
+  <span class="str">"COMMON"</span>: [
+    { <span class="fn">frameType</span>: <span class="str">"tok_c_1"</span>,     <span class="fn">test</span>: (d)    =&gt; <span class="fn">_type</span>(d) === <span class="str">"TOKEN"</span> },
+    { <span class="fn">frameType</span>: <span class="str">"hero_c_1"</span>,    <span class="fn">test</span>: (d)    =&gt; <span class="fn">_type</span>(d) === <span class="str">"HERO"</span> },
+    { <span class="fn">frameType</span>: <span class="str">"expperm_c_1"</span>, <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"PERMANENT"</span> &amp;&amp; <span class="fn">_subtype</span>(d, <span class="str">"EXPEDITION"</span>) &amp;&amp;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"expperm_c_2"</span>, <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"PERMANENT"</span> &amp;&amp; <span class="fn">_subtype</span>(d, <span class="str">"EXPEDITION"</span>) &amp;&amp;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"expperm_c_3"</span>, <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"PERMANENT"</span> &amp;&amp; <span class="fn">_subtype</span>(d, <span class="str">"EXPEDITION"</span>) &amp;&amp; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"expperm_c_4"</span>, <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"PERMANENT"</span> &amp;&amp; <span class="fn">_subtype</span>(d, <span class="str">"EXPEDITION"</span>) &amp;&amp; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"perm_c_1"</span>,    <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"PERMANENT"</span> &amp;&amp;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"perm_c_2"</span>,    <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"PERMANENT"</span> &amp;&amp;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"perm_c_3"</span>,    <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"PERMANENT"</span> &amp;&amp; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"perm_c_4"</span>,    <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"PERMANENT"</span> &amp;&amp; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"spell_c_1"</span>,   <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"SPELL"</span> &amp;&amp;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"spell_c_2"</span>,   <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"SPELL"</span> &amp;&amp;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"spell_c_3"</span>,   <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"SPELL"</span> &amp;&amp; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"spell_c_4"</span>,   <span class="fn">test</span>: (d, l) =&gt; <span class="fn">_type</span>(d) === <span class="str">"SPELL"</span> &amp;&amp; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"char_c_1"</span>,    <span class="fn">test</span>: (d, l) =&gt;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"char_c_2"</span>,    <span class="fn">test</span>: (d, l) =&gt;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"char_c_3"</span>,    <span class="fn">test</span>: (d, l) =&gt; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"char_c_4"</span>,    <span class="fn">test</span>: (d, l) =&gt; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">200</span> },
   ],
-  <span class="cm">// "COMMON": [ … ],</span>
-  <span class="cm">// "RARE":   [ … ],</span>
+  <span class="str">"RARE"</span>:    [ <span class="cm">/* same logic, _r_ prefix — no TOKEN / HERO */</span> ],
+  <span class="str">"EXALTED"</span>: [ { <span class="fn">frameType</span>: <span class="str">"char_e_1"</span>, <span class="fn">test</span>: () =&gt; <span class="nb">true</span> } ],
+  <span class="str">"UNIQUE"</span>:  [
+    { <span class="fn">frameType</span>: <span class="str">"char_u_1"</span>, <span class="fn">test</span>: (d, l) =&gt;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"char_u_2"</span>, <span class="fn">test</span>: (d, l) =&gt;  <span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"char_u_3"</span>, <span class="fn">test</span>: (d, l) =&gt; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &lt;  <span class="nb">200</span> },
+    { <span class="fn">frameType</span>: <span class="str">"char_u_4"</span>, <span class="fn">test</span>: (d, l) =&gt; !<span class="fn">_eff2</span>(d) &amp;&amp; <span class="fn">_eff1</span>(d, l) &gt;= <span class="nb">200</span> },
+  ],
 };</code></pre>
 
 <div class="box info">
-  <code>mainEffect</code> is the card's main effect text (<code>cardGroup.mainEffect</code>).
-  <code>echoEffect</code> is the discard/echo effect (<code>cardGroup.echoEffect</code> — an array;
-  empty array = no echo effect). The 100-character threshold and frame IDs are fully
-  configurable directly in the block.
+  Four helper functions are available inside <code>test()</code>:<br><br>
+  <code>_eff1(d, lang)</code> — visible character count of the main effect text (API tokens and markup stripped).<br>
+  <code>_eff2(d)</code> — <code>true</code> if the card has a discard / echo effect.<br>
+  <code>_type(d)</code> — <code>cardType.reference</code> string, e.g. <code>"CHARACTER"</code>, <code>"PERMANENT"</code>, <code>"SPELL"</code>, <code>"TOKEN"</code>, <code>"HERO"</code>.<br>
+  <code>_subtype(d, ref)</code> — <code>true</code> if any entry in <code>cardSubTypes[]</code> has the given <code>reference</code>, e.g. <code>"EXPEDITION"</code>.<br><br>
+  The 200-character threshold and all frame IDs are fully configurable directly in the block.
+  If no rule matches, the renderer falls back to the <code>defaultFrame</code> from <code>core.json</code>.
 </div>
 
 <h3>Biome variant auto-detection</h3>
@@ -384,29 +405,25 @@
   <span class="cm">// null  → use the default from config/elements.json</span>
   <span class="fn">visible</span>: <span class="nb">true</span>,
 
-  <span class="cm">// URL template — {varName} placeholders are replaced by values from the API JSON.</span>
+  <span class="cm">// URL template — {varName} placeholders are replaced by values resolved from vars below.</span>
   <span class="cm">// Set to null to use the value from API_MAPPING.values.qrCode instead.</span>
-  <span class="fn">url</span>: <span class="str">"https://altered-db.com/card/{reference}"</span>,
+  <span class="fn">url</span>: <span class="str">"https://altered.gg/{locale}/cards/{reference}"</span>,
 
-  <span class="cm">// Variable definitions: varName → dot-path into the API JSON.</span>
+  <span class="cm">// Variable definitions. Each value is either:</span>
+  <span class="cm">//   • a dot-path string  →  resolved from the API JSON</span>
+  <span class="cm">//   • a function         →  (apiJson, lang) =&gt; string  (for computed values)</span>
   <span class="fn">vars</span>: {
-    <span class="fn">reference</span>: <span class="str">"reference"</span>,             <span class="cm">// apiJson.reference</span>
-    <span class="cm">// locale: "forge.lang",            // apiJson.forge.lang</span>
-    <span class="cm">// set:    "set.reference",          // apiJson.set.reference</span>
+    <span class="fn">reference</span>: <span class="str">"reference"</span>,
+    <span class="fn">locale</span>:    (_d, lang) =&gt; ({ <span class="fn">en</span>: <span class="str">"en-us"</span>, <span class="fn">fr</span>: <span class="str">"fr-fr"</span>, <span class="fn">es</span>: <span class="str">"es-es"</span>, <span class="fn">it</span>: <span class="str">"it-it"</span>, <span class="fn">de</span>: <span class="str">"de-de"</span> }[lang] ?? <span class="str">"en-us"</span>),
+    <span class="cm">// set: "set.reference",</span>
   },
 };</code></pre>
 
 <p>
-  To add a custom variable, add an entry to <code>vars</code> — the key is the placeholder name
-  used in <code>url</code>, and the value is a dot-path into the API JSON:
+  Each entry in <code>vars</code> is either a <strong>dot-path</strong> string (resolved from the API JSON)
+  or a <strong>function</strong> <code>(apiJson, lang) =&gt; string</code> for computed values.
+  The key is the placeholder name used in <code>url</code>.
 </p>
-
-<pre><code><span class="cm">// Example: use the set code in the URL</span>
-<span class="fn">vars</span>: {
-  <span class="fn">reference</span>: <span class="str">"reference"</span>,
-  <span class="fn">set</span>:       <span class="str">"set.reference"</span>,
-},
-<span class="fn">url</span>: <span class="str">"https://mysite.com/cards/{set}/{reference}"</span>,</code></pre>
 
 <div class="box info">
   If a variable resolves to <code>null</code> or is missing from the API JSON,
@@ -482,8 +499,11 @@
     cardId:         <span class="str">"reference"</span>,
     <span class="cm">// qrCode — handled by API_QR_CODE block (URL template + visibility).</span>
     <span class="cm">// Add an entry here only as fallback when API_QR_CODE.url is null.</span>
-    cardType:       (d, lang) =&gt; (d.cardGroup?.cardSubTypes || [])
-                      .<span class="fn">map</span>(s =&gt; <span class="fn">_loc</span>(s.name, lang) ?? <span class="str">""</span>).<span class="fn">join</span>(<span class="str">", "</span>),
+    cardType:       (d, lang) =&gt; {
+      <span class="kw">const</span> type = <span class="fn">_loc</span>(d.cardType?.name, lang) ?? <span class="str">""</span>;
+      <span class="kw">const</span> subs = (d.cardSubTypes || []).<span class="fn">map</span>(s =&gt; <span class="fn">_loc</span>(s.name, lang) ?? <span class="str">""</span>).<span class="fn">filter</span>(Boolean).<span class="fn">join</span>(<span class="str">", "</span>);
+      <span class="kw">return</span> subs ? `${type} - ${subs}` : type;
+    },
     artistName:     <span class="str">"cardGroup.illustrator"</span>,
   },
 };</code></pre>

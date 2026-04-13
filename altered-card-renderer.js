@@ -274,10 +274,10 @@
   //   Add any field from the API JSON as a new variable here.
   const API_QR_CODE = {
     visible: true,
-    url:     "https://altered.gg/cards/{reference}",
+    url:     "https://altered.gg/{locale}/cards/{reference}",
     vars: {
       reference: "reference",
-      // locale: "forge.lang",
+      locale:    (_d, lang) => ({ en: "en-us", fr: "fr-fr", es: "es-es", it: "it-it", de: "de-de" }[lang] ?? "en-us"),
       // set:    "set.reference",
     },
   };
