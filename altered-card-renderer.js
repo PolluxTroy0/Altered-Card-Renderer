@@ -81,7 +81,7 @@
   // Controls how <altered-card> elements fetch card data.
   //   1 → one API call per tag (default)
   //   2 → one batch API call for all tags on the page (POST /api/cards/batch)
-  const FETCH_MODE = 1;
+  const FETCH_MODE = 2;
 
   // ── BATCH SIZE ───────────────────────────────────────────────────
   // Maximum number of card references sent in a single batch request (FETCH_MODE 2).
