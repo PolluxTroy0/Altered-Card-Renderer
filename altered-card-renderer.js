@@ -500,7 +500,7 @@
   let _cfg           = null;               // merged config object
   let _cfgPromise    = null;               // in-flight load promise
   let _loadedIndex   = null;               // raw index.json (exposed for app.js lang loading)
-  let _fontNames     = { regular: "serif", bold: "serif", italic: "serif" };
+  let _fontNames     = { regular: "serif", bold: "serif", italic: "serif", circled: null };
   let _biomeImages   = null;               // { forest:{}, mountain:{}, ocean:{} }
   let _biomePromise  = null;
   let _qrcodePromise = null;               // dynamic script load
@@ -828,13 +828,14 @@
       return;
     }
 
-    await Promise.all(["regular", "bold", "italic"].map(async v => {
+    await Promise.all(["regular", "bold", "italic", "circled"].map(async v => {
       const cfg = fontCfg[v];
       if (cfg?.file) {
         _fontNames[v] = await _loadOneFontFace(cfg.name, _resolveUrl(cfg.file, base), fallback);
-      } else {
+      } else if (v !== "circled") {
         _fontNames[v] = _fontNames.regular || fallback;
       }
+      // circled stays null if not configured — _segFont falls back to baseFont
     }));
   }
 
@@ -1183,6 +1184,8 @@
         x2:          d.x2        ?? fr.x2         ?? ft.x2         ?? g.x2         ?? null,
         maxWidth2:   d.maxWidth2  ?? fr.maxWidth2  ?? ft.maxWidth2  ?? g.maxWidth2  ?? null,
         size:        d.size       ?? fr.size       ?? ft.size       ?? g.size       ?? 10,
+        w:           d.w          ?? fr.w          ?? ft.w          ?? g.w          ?? null,
+        h:           d.h          ?? fr.h          ?? ft.h          ?? g.h          ?? null,
         visible:     d.visible    ?? fr.visible    ?? ft.visible    ?? g.visible    ?? true,
         align:       d.align      ?? fr.align      ?? ft.align      ?? g.align      ?? el.align ?? "left",
         fontStyle:   d.fontStyle  ?? fr.fontStyle  ?? ft.fontStyle  ?? g.fontStyle  ?? "regular",
@@ -1559,6 +1562,7 @@
     if (isCircled) {
       const scale   = _getCircledScale(text);
       const newSize = Math.round(parseFloat(baseFont) * scale);
+      if (_fontNames.circled) return `${newSize}px "${_fontNames.circled}"`;
       return baseFont.replace(/^[\d.]+px/, `${newSize}px`);
     }
     return baseFont;
