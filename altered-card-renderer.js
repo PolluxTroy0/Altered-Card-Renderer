@@ -418,7 +418,7 @@
         const subs = (d.cardSubTypes || []).map(s => _loc(s.name, lang) ?? "").filter(Boolean).join(", ");
         return subs ? `${type} - ${subs}` : type;
       },
-      artistName:    d => d.illustrator ?? null,
+      artistName:    d => d.artists?.[0]?.name ?? null,
     },
   };
 
