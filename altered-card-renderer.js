@@ -1154,9 +1154,10 @@
       ) || null;
     }
     typeCfg = typeCfg || {};
-    const ftId       = typeCfg.frameType               || null;
-    const ftDefaults = ftId ? (config.frameTypes?.[ftId] || {}) : {};
-    const frameDefs  = typeCfg.defaults                || {};
+    const ftId              = typeCfg.frameType               || null;
+    const ftDefaults        = ftId ? (config.frameTypes?.[ftId] || {}) : {};
+    const ftFactionOverride = sel.faction ? (ftDefaults.factionOverrides?.[sel.faction] || {}) : {};
+    const frameDefs         = typeCfg.defaults                || {};
 
     const elements = config.elements || [];
     const settings = {};
@@ -1164,48 +1165,50 @@
 
     for (const el of elements) {
       // Cascade (lowest → highest priority):
-      //   g  = config.globalDefaults
-      //   ft = framedata.json overrides for this frameType
-      //   fr = faction_*.json defaults for this specific frame
-      //   d  = per-card overrides from cardJson.globalDefaults
-      const g  = G[el.id]          || {};
-      const ft = ftDefaults?.[el.id] || {};
-      const fr = frameDefs?.[el.id]  || {};
-      const d  = defs[el.id]         || {};
+      //   g   = config.globalDefaults
+      //   ft  = framedata.json overrides for this frameType
+      //   fto = framedata.json factionOverrides[faction] for this frameType
+      //   fr  = faction_*.json defaults for this specific frame
+      //   d   = per-card overrides from cardJson.globalDefaults
+      const g   = G[el.id]                    || {};
+      const ft  = ftDefaults?.[el.id]         || {};
+      const fto = ftFactionOverride[el.id]    || {};
+      const fr  = frameDefs?.[el.id]          || {};
+      const d   = defs[el.id]                 || {};
 
       settings[el.id] = {
-        x:           d.x          ?? fr.x          ?? ft.x          ?? g.x          ?? 50,
-        y:           d.y          ?? fr.y          ?? ft.y          ?? g.y          ?? 50,
-        fontSize:    d.fontSize   ?? fr.fontSize   ?? ft.fontSize   ?? g.fontSize   ?? 18,
-        color:       d.color      ?? fr.color      ?? ft.color      ?? g.color      ?? "#ffffff",
-        maxWidth:    d.maxWidth   ?? fr.maxWidth   ?? ft.maxWidth   ?? g.maxWidth   ?? 85,
-        lineHeight:  d.lineHeight ?? fr.lineHeight ?? ft.lineHeight ?? g.lineHeight ?? 1.4,
-        maxLines:    d.maxLines   ?? fr.maxLines   ?? ft.maxLines   ?? g.maxLines   ?? 0,
-        x2:          d.x2        ?? fr.x2         ?? ft.x2         ?? g.x2         ?? null,
-        maxWidth2:   d.maxWidth2  ?? fr.maxWidth2  ?? ft.maxWidth2  ?? g.maxWidth2  ?? null,
-        size:        d.size       ?? fr.size       ?? ft.size       ?? g.size       ?? 10,
-        w:           d.w          ?? fr.w          ?? ft.w          ?? g.w          ?? null,
-        h:           d.h          ?? fr.h          ?? ft.h          ?? g.h          ?? null,
-        visible:     d.visible    ?? fr.visible    ?? ft.visible    ?? g.visible    ?? true,
-        align:       d.align      ?? fr.align      ?? ft.align      ?? g.align      ?? el.align ?? "left",
-        fontStyle:   d.fontStyle  ?? fr.fontStyle  ?? ft.fontStyle  ?? g.fontStyle  ?? "regular",
-        textShadow:  d.textShadow ?? fr.textShadow ?? ft.textShadow ?? g.textShadow ?? null,
-        opacity:     d.opacity    ?? fr.opacity    ?? ft.opacity    ?? g.opacity    ?? 1.0,
-        defaultValue: el.inputType === "qr" ? "" : (d.value ?? fr.value ?? ft.value ?? g.value ?? ""),
+        x:           d.x          ?? fr.x          ?? fto.x          ?? ft.x          ?? g.x          ?? 50,
+        y:           d.y          ?? fr.y          ?? fto.y          ?? ft.y          ?? g.y          ?? 50,
+        fontSize:    d.fontSize   ?? fr.fontSize   ?? fto.fontSize   ?? ft.fontSize   ?? g.fontSize   ?? 18,
+        color:       d.color      ?? fr.color      ?? fto.color      ?? ft.color      ?? g.color      ?? "#ffffff",
+        maxWidth:    d.maxWidth   ?? fr.maxWidth   ?? fto.maxWidth   ?? ft.maxWidth   ?? g.maxWidth   ?? 85,
+        lineHeight:  d.lineHeight ?? fr.lineHeight ?? fto.lineHeight ?? ft.lineHeight ?? g.lineHeight ?? 1.4,
+        maxLines:    d.maxLines   ?? fr.maxLines   ?? fto.maxLines   ?? ft.maxLines   ?? g.maxLines   ?? 0,
+        x2:          d.x2        ?? fr.x2         ?? fto.x2         ?? ft.x2         ?? g.x2         ?? null,
+        maxWidth2:   d.maxWidth2  ?? fr.maxWidth2  ?? fto.maxWidth2  ?? ft.maxWidth2  ?? g.maxWidth2  ?? null,
+        size:        d.size       ?? fr.size       ?? fto.size       ?? ft.size       ?? g.size       ?? 10,
+        w:           d.w          ?? fr.w          ?? fto.w          ?? ft.w          ?? g.w          ?? null,
+        h:           d.h          ?? fr.h          ?? fto.h          ?? ft.h          ?? g.h          ?? null,
+        visible:     d.visible    ?? fr.visible    ?? fto.visible    ?? ft.visible    ?? g.visible    ?? true,
+        align:       d.align      ?? fr.align      ?? fto.align      ?? ft.align      ?? g.align      ?? el.align ?? "left",
+        fontStyle:   d.fontStyle  ?? fr.fontStyle  ?? fto.fontStyle  ?? ft.fontStyle  ?? g.fontStyle  ?? "regular",
+        textShadow:  d.textShadow ?? fr.textShadow ?? fto.textShadow ?? ft.textShadow ?? g.textShadow ?? null,
+        opacity:     d.opacity    ?? fr.opacity    ?? fto.opacity    ?? ft.opacity    ?? g.opacity    ?? 1.0,
+        defaultValue: el.inputType === "qr" ? "" : (d.value ?? fr.value ?? fto.value ?? ft.value ?? g.value ?? ""),
         // herostat
-        rectCount:   d.rectCount  ?? fr.rectCount  ?? ft.rectCount  ?? g.rectCount  ?? 2,
-        rectW:       d.rectW      ?? fr.rectW      ?? ft.rectW      ?? g.rectW      ?? 18,
-        rectH:       d.rectH      ?? fr.rectH      ?? ft.rectH      ?? g.rectH      ?? 14,
-        rectGap:     d.rectGap    ?? fr.rectGap    ?? ft.rectGap    ?? g.rectGap    ?? 5,
-        rectRadius:  d.rectRadius ?? fr.rectRadius ?? ft.rectRadius ?? g.rectRadius ?? 3,
-        rectColor:   d.rectColor  ?? fr.rectColor  ?? ft.rectColor  ?? g.rectColor  ?? "#ffffff",
+        rectCount:   d.rectCount  ?? fr.rectCount  ?? fto.rectCount  ?? ft.rectCount  ?? g.rectCount  ?? 2,
+        rectW:       d.rectW      ?? fr.rectW      ?? fto.rectW      ?? ft.rectW      ?? g.rectW      ?? 18,
+        rectH:       d.rectH      ?? fr.rectH      ?? fto.rectH      ?? ft.rectH      ?? g.rectH      ?? 14,
+        rectGap:     d.rectGap    ?? fr.rectGap    ?? fto.rectGap    ?? ft.rectGap    ?? g.rectGap    ?? 5,
+        rectRadius:  d.rectRadius ?? fr.rectRadius ?? fto.rectRadius ?? ft.rectRadius ?? g.rectRadius ?? 3,
+        rectColor:   d.rectColor  ?? fr.rectColor  ?? fto.rectColor  ?? ft.rectColor  ?? g.rectColor  ?? "#ffffff",
         // biome
-        bgVariant:   d.bgVariant  ?? fr.bgVariant  ?? ft.bgVariant  ?? g.bgVariant  ?? "none",
-        bgSize:      d.bgSize     ?? fr.bgSize     ?? ft.bgSize     ?? g.bgSize     ?? 8.0,
-        bgX:         d.bgX        ?? fr.bgX        ?? ft.bgX        ?? g.bgX        ?? (d.x ?? fr.x ?? ft.x ?? g.x ?? 50),
-        bgY:         d.bgY        ?? fr.bgY        ?? ft.bgY        ?? g.bgY        ?? (d.y ?? fr.y ?? ft.y ?? g.y ?? 50),
-        bgW:         d.bgW        ?? fr.bgW        ?? ft.bgW        ?? g.bgW        ?? 0,
-        bgH:         d.bgH        ?? fr.bgH        ?? ft.bgH        ?? g.bgH        ?? 0,
+        bgVariant:   d.bgVariant  ?? fr.bgVariant  ?? fto.bgVariant  ?? ft.bgVariant  ?? g.bgVariant  ?? "none",
+        bgSize:      d.bgSize     ?? fr.bgSize     ?? fto.bgSize     ?? ft.bgSize     ?? g.bgSize     ?? 8.0,
+        bgX:         d.bgX        ?? fr.bgX        ?? fto.bgX        ?? ft.bgX        ?? g.bgX        ?? (d.x ?? fr.x ?? fto.x ?? ft.x ?? g.x ?? 50),
+        bgY:         d.bgY        ?? fr.bgY        ?? fto.bgY        ?? ft.bgY        ?? g.bgY        ?? (d.y ?? fr.y ?? fto.y ?? ft.y ?? g.y ?? 50),
+        bgW:         d.bgW        ?? fr.bgW        ?? fto.bgW        ?? ft.bgW        ?? g.bgW        ?? 0,
+        bgH:         d.bgH        ?? fr.bgH        ?? fto.bgH        ?? ft.bgH        ?? g.bgH        ?? 0,
       };
 
       values[el.id] = el.inputType === "qr"
@@ -1234,14 +1237,15 @@
     const overlaySettings = {};
     for (const ov of (config.frameParts || [])) {
       const id   = ov.id;
-      const base = ov.default                    || {};
-      const ft   = ftDefaults?.frameParts?.[id]  || {};
-      const fr   = frameDefs?.frameParts?.[id]   || {};
+      const base = ov.default                             || {};
+      const ft   = ftDefaults?.frameParts?.[id]           || {};
+      const fto  = ftFactionOverride.frameParts?.[id]     || {};
+      const fr   = frameDefs?.frameParts?.[id]            || {};
       overlaySettings[id] = {
-        visible: fr.visible ?? ft.visible ?? base.visible ?? false,
-        x:       fr.x       ?? ft.x       ?? base.x       ?? 50,
-        y:       fr.y       ?? ft.y       ?? base.y       ?? 50,
-        size:    fr.size    ?? ft.size    ?? base.size    ?? 15,
+        visible: fr.visible ?? fto.visible ?? ft.visible ?? base.visible ?? false,
+        x:       fr.x       ?? fto.x       ?? ft.x       ?? base.x       ?? 50,
+        y:       fr.y       ?? fto.y       ?? ft.y       ?? base.y       ?? 50,
+        size:    fr.size    ?? fto.size    ?? ft.size    ?? base.size    ?? 15,
       };
     }
 

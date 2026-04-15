@@ -482,6 +482,38 @@
   If no rule matches, the renderer falls back to the <code>defaultFrame</code> from <code>core.json</code>.
 </div>
 
+<h3>Per-faction element tweaks — <code>factionOverrides</code></h3>
+
+<p>
+  Each entry in <code>framedata.json → frameTypes</code> supports an optional <code>factionOverrides</code>
+  key for applying small, faction-specific adjustments to element positions or properties without
+  creating separate frame types or touching any <code>faction_*.json</code> file.
+</p>
+
+<pre><code><span class="cm">// In config/framedata.json:</span>
+<span class="str">"frameTypes"</span>: {
+  <span class="str">"char_c_1"</span>: {
+    <span class="str">"effects"</span>: { <span class="str">"y"</span>: 65 },
+    <span class="str">"factionOverrides"</span>: {
+      <span class="str">"AX"</span>: { <span class="str">"effects"</span>: { <span class="str">"y"</span>: 67, <span class="str">"fontSize"</span>: 16 } },
+      <span class="str">"MU"</span>: { <span class="str">"cardName"</span>: { <span class="str">"color"</span>: <span class="str">"#F0E8D0"</span> } }
+    }
+  }
+}</code></pre>
+
+<p>Keys are faction names as returned by the API (<code>d.faction?.name</code> — e.g. <code>"AX"</code>, <code>"MU"</code>, <code>"OR"</code>…).
+Values follow the same element-property structure as the rest of the <code>frameType</code> entry.
+<code>frameParts</code> overrides are also supported.</p>
+
+<p>The resulting defaults cascade, from lowest to highest priority:</p>
+<pre><code>globalDefaults[el].prop
+    ↑ overridden by
+frameTypes[frameType][el].prop                     <span class="cm">// base frame type (framedata.json)</span>
+    ↑ overridden by
+frameTypes[frameType].factionOverrides[faction][el].prop  <span class="cm">// ← faction tweak (framedata.json)</span>
+    ↑ overridden by
+factions[faction].types[key].defaults[el].prop     <span class="cm">// per-frame override (faction_*.json)</span></code></pre>
+
 <h3>Biome variant auto-detection</h3>
 
 <p>
