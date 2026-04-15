@@ -168,14 +168,15 @@
   flushed:
 </p>
 <ol>
-  <li>Unique refs are collected and capped at <code>BATCH_MAX</code>. Refs beyond this limit are silently dropped &mdash; their elements remain empty.</li>
-  <li>The capped list is split into chunks of at most <code>BATCH_SIZE</code>.</li>
+  <li>Already-cached refs are served instantly from the in-memory API cache &mdash; no network request.</li>
+  <li>Remaining unique refs are capped at <code>BATCH_MAX</code>. Refs beyond this limit are silently dropped &mdash; their elements remain empty.</li>
+  <li>The uncached list is split into chunks of at most <code>BATCH_SIZE</code>.</li>
   <li>All chunks are sent in parallel as <code>POST /api/cards/batch</code> requests.</li>
-  <li>Responses are merged and each waiting element is rendered with its own data.</li>
+  <li>Responses are merged, stored in the cache, and each waiting element is rendered with its own data.</li>
 </ol>
 <p>
   Elements that connect <em>after</em> the flush (e.g. injected dynamically) automatically fall
-  back to individual mode-1 calls.
+  back to individual mode-1 calls, which also benefit from the shared API cache.
 </p>
 
 <h3>BATCH_SIZE and BATCH_MAX</h3>
@@ -217,6 +218,92 @@
 </table>
 
 <!-- ══════════════════════════════════════════════════════════════ -->
+<h2>In-memory caches &amp; hover patterns</h2>
+
+<p>
+  The renderer maintains two in-memory caches shared across all card instances on the page.
+  Both are <code>Map</code> objects that persist for the lifetime of the page (a full reload resets them).
+</p>
+
+<p>Each cache can be enabled or disabled independently via a constant near the top of <code>altered-card-renderer.js</code>:</p>
+
+<pre><code><span class="kw">const</span> CACHE_API    = <span class="nb">true</span>;  <span class="cm">// card JSON from the API</span>
+<span class="kw">const</span> CACHE_IMAGES = <span class="nb">true</span>;  <span class="cm">// frame / logo / frame-part HTMLImageElements</span>
+<span class="kw">const</span> CACHE_RENDER = <span class="nb">true</span>;  <span class="cm">// fully rendered card as ImageBitmap</span>
+<span class="kw">const</span> CACHE_CANVAS = <span class="nb">true</span>;  <span class="cm">// skip re-render when element already has a &lt;canvas&gt;</span></code></pre>
+
+<table>
+  <tr><th>Constant</th><th>Key</th><th>What it stores</th></tr>
+  <tr><td><code>CACHE_API</code></td><td><code>ref|locale</code></td><td>Resolved card JSON from the API. A second render of the same card never makes a network request.</td></tr>
+  <tr><td><code>CACHE_IMAGES</code></td><td>Image URL</td><td>Loaded <code>HTMLImageElement</code> objects — frames, set logos, frame parts, biome badges, etc. Images are never fetched twice, even across different card renders.</td></tr>
+  <tr><td><code>CACHE_RENDER</code></td><td><code>ref|locale</code></td><td><code>ImageBitmap</code> of the fully rendered card. After the first render, subsequent renders (e.g. hover overlay) just blit the bitmap onto a new canvas — no image loading, no canvas drawing at all.</td></tr>
+  <tr><td><code>CACHE_CANVAS</code></td><td>—</td><td>Skip fetch + render entirely when <code>connectedCallback</code> fires on an element that already has a <code>&lt;canvas&gt;</code> (e.g. DOM move on hover).</td></tr>
+</table>
+
+<p>
+  In addition, <code>connectedCallback</code> skips the fetch and render entirely if the element already
+  contains a <code>&lt;canvas&gt;</code>. This covers the case where an existing
+  <code>&lt;altered-card&gt;</code> element is moved to an overlay or modal on hover.
+</p>
+
+<h3>Hover overlay — recommended pattern</h3>
+<p>
+  To avoid redundant fetches and re-renders when enlarging a card on hover, prefer
+  <strong>moving</strong> the existing element rather than cloning or recreating it:
+</p>
+
+<pre><code><span class="cm">// On hover: move the element into an overlay — canvas guard skips re-render.</span>
+overlay.<span class="fn">appendChild</span>(cardEl);   <span class="cm">// connectedCallback fires but canvas already exists → no-op</span>
+
+<span class="cm">// On hover-out: move it back.</span>
+originalParent.<span class="fn">insertBefore</span>(cardEl, placeholder);</code></pre>
+
+<p>
+  If your hover creates a <strong>new</strong> <code>&lt;altered-card&gt;</code> element (e.g. via
+  <code>innerHTML</code> or <code>cloneNode</code>), the API cache still avoids the network
+  request, but the canvas will be re-rendered from the cached data.
+  Moving the element is always the most efficient approach.
+</p>
+
+<div class="box tip">
+  All caches and the canvas guard are active automatically — no configuration needed.<br><br>
+  <strong>Moving</strong> the existing element (e.g. into an overlay): canvas guard fires → zero network, zero render.<br>
+  <strong>Creating</strong> a new element for the same card: render cache fires → zero network, instant bitmap blit.<br>
+  <strong>First load</strong> of a card: full pipeline (API fetch → image loading → canvas draw), then all three caches are populated.
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2>Loading placeholder</h2>
+
+<p>
+  While the card images are loading, the renderer draws a placeholder on the canvas.
+  A text label is drawn on top — configurable via four constants near the top of
+  <code>altered-card-renderer.js</code>:
+</p>
+
+<pre><code><span class="kw">const</span> LOADING_TEXT  = <span class="str">"Loading…"</span>;             <span class="cm">// null or "" to hide</span>
+<span class="kw">const</span> LOADING_X     = <span class="nb">50</span>;                      <span class="cm">// horizontal position in % (0 = left, 50 = center, 100 = right)</span>
+<span class="kw">const</span> LOADING_Y     = <span class="nb">50</span>;                      <span class="cm">// vertical position in %   (0 = top,  50 = center, 100 = bottom)</span>
+<span class="kw">const</span> LOADING_COLOR = <span class="str">"rgba(255,255,255,0.75)"</span>; <span class="cm">// any CSS color</span></code></pre>
+
+<p>
+  <code>LOADING_TEXT</code> supports two special syntaxes:
+</p>
+<ul>
+  <li><code>\n</code> — line break. The block of lines is centred around <code>LOADING_Y</code>.</li>
+  <li><code>{ref}</code> — replaced at render time by the card reference (e.g. <code>ALT_CORE_B_AX_04_U_10</code>).</li>
+</ul>
+
+<pre><code><span class="cm">// Examples:</span>
+<span class="kw">const</span> LOADING_TEXT = <span class="str">"Loading…\n{ref}"</span>; <span class="cm">// two lines: label + card ref</span>
+<span class="kw">const</span> LOADING_TEXT = <span class="nb">null</span>;              <span class="cm">// no text at all</span></code></pre>
+
+<p>
+  The font size is proportional to the canvas width (5.5%) and adapts automatically to any display size.
+  A semi-transparent black drop shadow is always added behind the text for readability on any background.
+</p>
+
 <h2>Per-card overrides &#x2014; <code>cards_data.json</code></h2>
 
 <p>

@@ -95,6 +95,53 @@
   // will remain empty. Set to Infinity to disable the cap.
   const BATCH_MAX = 50;
 
+  // ── CACHES ───────────────────────────────────────────────────────
+  // Toggle each in-memory cache independently.
+  //
+  //   CACHE_API    — card JSON from the API (keyed by ref|locale).
+  //                  Prevents repeat network requests for the same card.
+  //   CACHE_IMAGES — HTMLImageElement objects for frames, logos, frame parts…
+  //                  Prevents re-fetching asset images across renders.
+  //   CACHE_RENDER — ImageBitmap of the fully rendered card (keyed by ref|locale).
+  //                  Subsequent renders (e.g. hover) blit the bitmap instantly,
+  //                  skipping image loading and canvas drawing entirely.
+  //   CACHE_CANVAS — Skip fetch + render entirely when connectedCallback fires on
+  //                  an element that already contains a <canvas> (e.g. DOM move).
+  const CACHE_API    = true;
+  const CACHE_IMAGES = true;
+  const CACHE_RENDER = true;
+  const CACHE_CANVAS = true;
+
+  // ── LOADING TEXT ─────────────────────────────────────────────────
+  // Text displayed on the placeholder while the card is loading.
+  // Set to null or "" to disable.
+  //
+  //   LOADING_TEXT      — label. Supports \n (multiline) and {ref} (card reference).
+  //   LOADING_X         — horizontal position: 0 = left edge, 50 = center, 100 = right edge (%).
+  //   LOADING_Y         — vertical position:   0 = top  edge, 50 = center, 100 = bottom edge (%).
+  //   LOADING_COLOR     — CSS color of the text. Supports any valid CSS color, including rgba().
+  //   LOADING_FONT_SIZE — font size as a % of the canvas width (e.g. 5.5 → ~41px on a 744px canvas).
+  const LOADING_TEXT      = "Loading…\n{ref}";
+  const LOADING_X         = 50;
+  const LOADING_Y         = 70;
+  const LOADING_COLOR     = "rgb(255, 255, 255)";
+  const LOADING_FONT_SIZE = 5.5;
+
+  // ── ERROR TEXT ───────────────────────────────────────────────────
+  // Text displayed on the card canvas when loading fails.
+  // Uses the same placeholder background as the loading state.
+  //
+  //   ERROR_TEXT      — label. Supports \n (multiline), {ref} and {msg} placeholders.
+  //   ERROR_X         — horizontal position in % (same scale as LOADING_X).
+  //   ERROR_Y         — vertical position in %   (same scale as LOADING_Y).
+  //   ERROR_COLOR     — CSS color of the text.
+  //   ERROR_FONT_SIZE — font size as a % of the canvas width (same scale as LOADING_FONT_SIZE).
+  const ERROR_TEXT      = "Error\n{msg}\n{ref}";
+  const ERROR_X         = 50;
+  const ERROR_Y         = 50;
+  const ERROR_COLOR     = "#e06060";
+  const ERROR_FONT_SIZE = 5.5;
+
   // ── DEFAULT COLLECTION ───────────────────────────────────────────
   // Frame collection used when forge.collection is absent from the JSON.
   // Change this if your cards are not from the "official" collection.
@@ -507,6 +554,19 @@
   let _iconCssInjected  = false;
   let _placeholderImg   = null;   // pre-loaded custom placeholder image (from core.json > placeholderBg)
 
+  // ── Image cache ───────────────────────────────────────────────────
+  // Keyed by URL. Stores Promises resolving to HTMLImageElement (or null on error).
+  // Shared across all card renders so frames, logos and frame parts are never
+  // fetched twice, even when a new <altered-card> element is created (e.g. hover).
+  const _imgCache = new Map();
+
+  // ── Render cache ──────────────────────────────────────────────────
+  // Keyed by "ref|locale". Stores Promises resolving to ImageBitmap.
+  // After the first full render of a card, the result is captured as a GPU bitmap.
+  // Subsequent renders (e.g. hover overlay) just blit the bitmap onto a new canvas —
+  // no image loading, no canvas drawing.
+  const _renderCache = new Map();
+
   // Set during _renderCard() so helpers can access config without
   // threading it through every function signature.
   let _activeCfg = null;
@@ -558,7 +618,7 @@
       state.biomeImages = _biomeImages;
 
       // Draw placeholder while images load
-      _drawPlaceholderBg(ctx, CARD_W, CARD_H);
+      _drawPlaceholderBg(ctx, CARD_W, CARD_H, cardJson._ref);
 
       // Load all assets (frame, bg, logo, stamps, QR…)
       await _loadCardAssets(state, cardJson);
@@ -652,8 +712,8 @@
     },
 
     /** Draw placeholder background — exposed for app.js compatibility */
-    _drawPlaceholderBg(ctx, W, H) {
-      _drawPlaceholderBg(ctx, W, H);
+    _drawPlaceholderBg(ctx, W, H, ref) {
+      _drawPlaceholderBg(ctx, W, H, ref);
     },
 
     // ── Getters — for app.js to sync its state after init() ──────
@@ -1112,6 +1172,7 @@
     // ── Assemble forge card JSON ──────────────────────────────────
     const cardJson = {
       _type: "card-config",
+      _ref: apiJson.reference || "",
       _selection: {
         faction:     sel.faction    || "",
         collection:  sel.collection || "official",
@@ -1266,6 +1327,7 @@
       activeFrameTypeId: ftId,
       _qrLogoOverride:  null,
       _isAdmin:         false,
+      _ref:             cardJson._ref || "",
     };
   }
 
@@ -1282,13 +1344,16 @@
 
     const loadImg = src => {
       if (!src) return Promise.resolve(null);
-      return new Promise(resolve => {
+      if (CACHE_IMAGES && _imgCache.has(src)) return _imgCache.get(src);
+      const p = new Promise(resolve => {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload  = () => resolve(img);
-        img.onerror = () => resolve(null);
+        img.onerror = () => { _imgCache.delete(src); resolve(null); };
         img.src = src;
       });
+      if (CACHE_IMAGES) _imgCache.set(src, p);
+      return p;
     };
 
     const jobs = [];
@@ -1841,29 +1906,66 @@
   // ── Placeholder background ───────────────────────────────────
   // Shown while card images are loading.
   // Controlled by core.json > placeholderBg: { enabled, file }.
-  // To customize the built-in gradient/grid, edit this function directly.
-  function _drawPlaceholderBg(ctx, W, H) {
+  // To customize the built-in gradient/grid, edit _drawCardBg() directly.
+
+  // ── Shared background (gradient or custom image) ─────────────────
+  function _drawCardBg(ctx, W, H) {
     if (_placeholderImg) {
-      // Custom image — scale to cover the canvas (same as background rendering)
       const sc = Math.max(W / _placeholderImg.naturalWidth, H / _placeholderImg.naturalHeight);
       const dw = _placeholderImg.naturalWidth  * sc;
       const dh = _placeholderImg.naturalHeight * sc;
       ctx.drawImage(_placeholderImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
-      return;
+    } else {
+      // Built-in animated gradient — edit colours/grid/emoji below as needed
+      const grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0,   "#1a1a3a");
+      grad.addColorStop(0.5, "#0e1428");
+      grad.addColorStop(1,   "#080810");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = "rgba(255,255,255,0.04)"; ctx.lineWidth = 1;
+      for (let gx = 0; gx < W; gx += 40) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke(); }
+      for (let gy = 0; gy < H; gy += 40) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke(); }
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.font = "bold 80px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("🃏", W/2, H/2);
     }
-    // Built-in animated gradient — edit colours/grid/emoji below as needed
-    const grad = ctx.createLinearGradient(0, 0, W, H);
-    grad.addColorStop(0,   "#1a1a3a");
-    grad.addColorStop(0.5, "#0e1428");
-    grad.addColorStop(1,   "#080810");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = "rgba(255,255,255,0.04)"; ctx.lineWidth = 1;
-    for (let gx = 0; gx < W; gx += 40) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke(); }
-    for (let gy = 0; gy < H; gy += 40) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke(); }
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    ctx.font = "bold 80px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("🃏", W/2, H/2);
+  }
+
+  // ── Shared text label (multiline, drop shadow) ───────────────────
+  // template supports {ref} and {msg} placeholders, and \n for line breaks.
+  function _drawCardLabel(ctx, W, H, template, x, y, color, fontSize, ref, msg) {
+    if (!template) return;
+    const resolved = template
+      .replace(/\{ref\}/g, ref || "")
+      .replace(/\{msg\}/g, msg || "");
+    const lines    = resolved.split("\n");
+    fontSize       = Math.round(W * fontSize / 100);
+    const lineH    = fontSize * 1.3;
+    const tx       = W * x / 100;
+    const blockTop = H * y / 100 - (lines.length - 1) * lineH / 2;
+    ctx.save();
+    ctx.textAlign    = "center";
+    ctx.textBaseline = "middle";
+    ctx.font         = `bold ${fontSize}px sans-serif`;
+    for (let i = 0; i < lines.length; i++) {
+      const ty = blockTop + i * lineH;
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
+      ctx.fillText(lines[i], tx + 2, ty + 2);
+      ctx.fillStyle = color;
+      ctx.fillText(lines[i], tx,     ty);
+    }
+    ctx.restore();
+  }
+
+  function _drawPlaceholderBg(ctx, W, H, ref) {
+    _drawCardBg(ctx, W, H);
+    _drawCardLabel(ctx, W, H, LOADING_TEXT, LOADING_X, LOADING_Y, LOADING_COLOR, LOADING_FONT_SIZE, ref);
+  }
+
+  function _drawErrorBg(ctx, W, H, ref, msg) {
+    _drawCardBg(ctx, W, H);
+    _drawCardLabel(ctx, W, H, ERROR_TEXT, ERROR_X, ERROR_Y, ERROR_COLOR, ERROR_FONT_SIZE, ref, msg);
   }
 
 
@@ -1900,7 +2002,7 @@
         ctx.drawImage(img, dx, dy, dw, dh);
       }
     } else {
-      _drawPlaceholderBg(ctx, W, H);
+      _drawPlaceholderBg(ctx, W, H, state._ref);
     }
 
     // ── 1b. Black inset border for blackBleed frames ───────────
@@ -2262,11 +2364,19 @@
         document.head.appendChild(s);
       }
 
-      function _cardErrHtml(ref, msg) {
-        return '<div style="aspect-ratio:744/1039;display:flex;align-items:center;justify-content:center;'
-             + 'background:#1a2240;border-radius:8px;color:#e06060;font:0.8rem/1.4 sans-serif;'
-             + 'text-align:center;padding:1rem">' + ref + "<br>" + msg + "</div>";
+      function _cardErrCanvas(element, ref, msg) {
+        const canvas = document.createElement("canvas");
+        canvas.width  = CARD_W;
+        canvas.height = CARD_H;
+        _drawErrorBg(canvas.getContext("2d"), CARD_W, CARD_H, ref, msg);
+        element.innerHTML = "";
+        element.appendChild(canvas);
       }
+
+      // ── API data cache ────────────────────────────────────────────
+      // Keyed by "ref|locale". Stores resolved API data so re-connecting
+      // an element (e.g. on hover) never triggers a second network request.
+      const _apiCache = new Map();
 
       // ── Mode 2 — batch queue ──────────────────────────────────────
       // Entries: { element, ref, locale, collection }
@@ -2284,10 +2394,14 @@
         const batchLocale = entries.find(e => e.element.hasAttribute("locale"))?.locale ?? "en";
 
         // Unique refs (preserve order), capped at BATCH_MAX then split into chunks of BATCH_SIZE.
+        // Refs already in the API cache are served directly — only uncached refs are fetched.
         const allRefs = [...new Set(entries.map(e => e.ref))];
+        const uncachedRefs = CACHE_API
+          ? allRefs.filter(r => !_apiCache.has(r + "|" + batchLocale))
+          : allRefs;
         if (allRefs.length > BATCH_MAX)
           console.warn(`[altered-card] ${allRefs.length} unique refs exceed BATCH_MAX (${BATCH_MAX}) — truncating.`);
-        const refs = allRefs.slice(0, BATCH_MAX);
+        const refs = uncachedRefs.slice(0, BATCH_MAX);
         const chunks = [];
         for (let i = 0; i < refs.length; i += BATCH_SIZE) chunks.push(refs.slice(i, i + BATCH_SIZE));
 
@@ -2322,7 +2436,12 @@
           for (const results of responses) {
             if (Array.isArray(results)) {
               for (const item of results) {
-                if (item?.reference) byRef.set(item.reference, item);
+                if (item?.reference) {
+                  if (_proxyBase !== false && Array.isArray(item.assets))
+                    item.assets = item.assets.map(u => u ? _proxyBase + "?img=" + encodeURIComponent(u) : u);
+                  byRef.set(item.reference, item);
+                  if (CACHE_API) _apiCache.set(item.reference + "|" + batchLocale, Promise.resolve(item));
+                }
               }
             }
           }
@@ -2336,19 +2455,34 @@
 
         // Distribute to each waiting element.
         for (const e of entries) {
-          const data = byRef.get(e.ref);
+          const renderKey = e.ref + "|" + e.locale;
+
+          // ── Render cache hit: blit bitmap, skip everything ───────
+          if (CACHE_RENDER) {
+            const cachedBitmap = _renderCache.get(renderKey);
+            if (cachedBitmap) {
+              cachedBitmap.then(bmp => AlteredCardElement._mountBitmap(e.element, bmp))
+                .catch(err => { _cardErrCanvas(e.element, e.ref, "render error"); console.error(err); });
+              continue;
+            }
+          }
+
+          // Serve from API cache if available (covers both batch results and previously cached refs).
+          const cachedPromise = CACHE_API ? _apiCache.get(e.ref + "|" + batchLocale) : undefined;
+          const data = byRef.get(e.ref) ?? (cachedPromise ? await cachedPromise : null);
           if (!data) {
             // Ref missing from batch response — fall back to individual call.
             AlteredCardElement._loadSingle(e.element, e.ref, e.locale, e.collection);
             continue;
           }
-          // Proxy asset URLs.
-          if (_proxyBase !== false && Array.isArray(data.assets))
-            data.assets = data.assets.map(u => u ? _proxyBase + "?img=" + encodeURIComponent(u) : u);
           // Set forge metadata — lang is per-element, not shared.
           data.forge = { collection: e.collection, lang: e.locale };
           AlteredRender.mountFromApi(e.element, data, undefined, { _resolvedProxy: _proxyBase })
-            .catch(err => { e.element.innerHTML = _cardErrHtml(e.ref, "render error"); console.error(err); });
+            .then(({ canvas }) => {
+              if (CACHE_RENDER && canvas && typeof createImageBitmap === "function")
+                _renderCache.set(renderKey, createImageBitmap(canvas));
+            })
+            .catch(err => { _cardErrCanvas(e.element, e.ref, "render error"); console.error(err); });
         }
       }
 
@@ -2356,6 +2490,8 @@
         connectedCallback() {
           const ref = this.getAttribute("ref");
           if (!ref) return;
+          // Already rendered — skip fetch and re-render on DOM re-insertion (e.g. hover overlays).
+          if (CACHE_CANVAS && this.querySelector("canvas")) return;
           const locale     = this.getAttribute("locale")     || "en";
           const collection = this.getAttribute("collection") || DEFAULT_COLLECTION;
 
@@ -2369,41 +2505,76 @@
                   _batchScheduled = false;
                   console.error("[altered-card] init error", err);
                   _batchQueue.splice(0).forEach(e => {
-                    e.element.innerHTML = _cardErrHtml(e.ref, "init error");
+                    _cardErrCanvas(e.element, e.ref, "init error");
                   });
                 });
             }
           } else {
             AlteredRender.init({ configBaseUrl: _cfgBase })
               .then(() => AlteredCardElement._loadSingle(this, ref, locale, collection))
-              .catch(err => { this.innerHTML = _cardErrHtml(ref, "init error"); console.error(err); });
+              .catch(err => { _cardErrCanvas(this, ref, "init error"); console.error(err); });
           }
+        }
+
+        // Blit a cached ImageBitmap into a new canvas inside element.
+        static _mountBitmap(element, bitmap) {
+          const canvas = document.createElement("canvas");
+          canvas.width  = bitmap.width;
+          canvas.height = bitmap.height;
+          canvas.getContext("2d").drawImage(bitmap, 0, 0);
+          element.innerHTML = "";
+          element.appendChild(canvas);
         }
 
         // Mode 1 individual load — also used as fallback in mode 2.
         static async _loadSingle(element, ref, locale, collection) {
-          let url;
-          if (_proxyBase === false) {
-            url = RESOURCES.cardApiUrl
-              .replace('{ref}',    encodeURIComponent(ref))
-              .replace('{locale}', locale);
-          } else {
-            url = _proxyBase + "?ref=" + encodeURIComponent(ref) + "&locale=" + locale
-                + "&api=" + encodeURIComponent(RESOURCES.cardApiUrl);
+          const cacheKey = ref + "|" + locale;
+
+          // ── Render cache hit: blit bitmap, skip everything else ──
+          if (CACHE_RENDER) {
+            const cachedBitmap = _renderCache.get(cacheKey);
+            if (cachedBitmap) {
+              AlteredCardElement._mountBitmap(element, await cachedBitmap);
+              return;
+            }
+          }
+
+          // ── API data cache ───────────────────────────────────────
+          let dataPromise = CACHE_API ? _apiCache.get(cacheKey) : undefined;
+          if (!dataPromise) {
+            let url;
+            if (_proxyBase === false) {
+              url = RESOURCES.cardApiUrl
+                .replace('{ref}',    encodeURIComponent(ref))
+                .replace('{locale}', locale);
+            } else {
+              url = _proxyBase + "?ref=" + encodeURIComponent(ref) + "&locale=" + locale
+                  + "&api=" + encodeURIComponent(RESOURCES.cardApiUrl);
+            }
+            dataPromise = fetch(url)
+              .then(res => { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
+              .then(data => {
+                if (_proxyBase !== false && Array.isArray(data.assets))
+                  data.assets = data.assets.map(u => u ? _proxyBase + "?img=" + encodeURIComponent(u) : u);
+                return data;
+              })
+              .catch(err => { if (CACHE_API) _apiCache.delete(cacheKey); throw err; });
+            if (CACHE_API) _apiCache.set(cacheKey, dataPromise);
           }
           let data;
           try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            data = await res.json();
+            data = await dataPromise;
           } catch {
-            element.innerHTML = _cardErrHtml(ref, "not found");
+            _cardErrCanvas(element, ref, "not found");
             return;
           }
-          if (_proxyBase !== false && Array.isArray(data.assets))
-            data.assets = data.assets.map(u => u ? _proxyBase + "?img=" + encodeURIComponent(u) : u);
           data.forge = { collection, lang: locale };
-          await AlteredRender.mountFromApi(element, data, undefined, { _resolvedProxy: _proxyBase });
+          const { canvas } = await AlteredRender.mountFromApi(element, data, undefined, { _resolvedProxy: _proxyBase });
+
+          // ── Store rendered bitmap for instant future renders ─────
+          if (CACHE_RENDER && canvas && typeof createImageBitmap === "function") {
+            _renderCache.set(cacheKey, createImageBitmap(canvas));
+          }
         }
       }
 
