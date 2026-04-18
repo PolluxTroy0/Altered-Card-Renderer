@@ -1,5 +1,7 @@
 # Altered Card Renderer
 
+> **Active development** — This renderer is under active development. Frequent updates are to be expected; breaking changes may occur between versions. Check the repository for the latest release before upgrading.
+
 In Altered TCG, each Unique card is one-of-a-kind: its artwork and stats are specific to a single physical card owned by a player. This renderer lets you **display the full card image** of any Unique — artwork, frame, biome values, effect text — by fetching its data from an API and drawing it into an HTML canvas.
 
 Embed it on any page with a single `<script>` tag.  
@@ -196,3 +198,19 @@ Bug reports, questions and suggestions welcome:
 
 - **GitHub** — open an issue on this repository
 - **Discord** — `.polluxtroy`
+
+---
+
+## License
+
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+
+You are free to use, modify, and distribute this software, provided that:
+
+- The original author (**PolluxTroy**) and the source repository ([github.com/PolluxTroy0/Altered-Card-Renderer](https://github.com/PolluxTroy0/Altered-Card-Renderer)) are credited in any derivative work or redistribution.
+- Any modified version is distributed under the same GPL-3.0 license and made publicly available with its full source code.
+- The original copyright notice and license text are preserved in all copies.
+
+See the full license text at [gnu.org/licenses/gpl-3.0](https://www.gnu.org/licenses/gpl-3.0.html).
+
+> **Note:** Altered TCG card artwork, frames, and game assets remain the property of their respective owners. This renderer is a fan-made tool and is not affiliated with or endorsed by Equinox.
