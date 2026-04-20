@@ -956,6 +956,7 @@
       if (!file) return Promise.resolve();
       return new Promise(resolve => {
         const img = new Image();
+        img.crossOrigin = "anonymous";
         img.onload  = () => { result[biomeKey][variant] = img; resolve(); };
         img.onerror = () => resolve();
         img.src = _resolveUrl(file, base);
