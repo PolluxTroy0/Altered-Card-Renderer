@@ -2415,7 +2415,8 @@
           const fetchChunk = async (chunk) => {
             let res;
             if (_proxyBase === false) {
-              const batchUrl = RESOURCES.cardApiUrl.replace(/\/cards.*$/, '/cards/batch');
+              const _apiOrigin = RESOURCES.cardApiUrl.match(/^https?:\/\/[^/]+/)?.[0] ?? '';
+              const batchUrl = _apiOrigin + RESOURCES.cardApiUrl.slice(_apiOrigin.length).replace(/\/cards.*$/, '/cards/batch');
               res = await fetch(batchUrl, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
