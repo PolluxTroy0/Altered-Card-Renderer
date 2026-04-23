@@ -7,7 +7,7 @@ In Altered TCG, each Unique card is one-of-a-kind: its artwork and stats are spe
 Embed it on any page with a single `<script>` tag.  
 No build step, no framework, no dependencies.
 
-**[Live example →](https://altered-db.com/forge/standalone/altered-card-renderer-example.html)**
+**[Live example →](https://cardrenderer.alteredcore.org)**
 
 ---
 

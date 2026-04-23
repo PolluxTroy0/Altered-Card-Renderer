@@ -3,150 +3,452 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Altered Card Renderer Example</title>
+  <title>Altered Card Renderer</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      margin: 0;
-      padding: 2rem 1.5rem;
+      min-height: 100vh;
       background: #0e1428;
       color: #c8d0e0;
-      font: 0.95rem/1.5 sans-serif;
-    }
-
-    h2 {
-      color: #e8eaf0;
-      font-size: 1rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      margin: 0 0 1rem;
-    }
-
-    section {
-      max-width: 1100px;
-      margin: 0 auto 3rem;
-    }
-
-    /* ── Part 1 — Search ── */
-
-    .search-form {
+      font: 15px/1.7 sans-serif;
       display: flex;
-      gap: 0.6rem;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 20px 0;
+    }
+
+    /* ── Header ── */
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+      width: 100%;
+      max-width: 860px;
+      margin-bottom: 8px;
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .title {
+      font-size: 22px;
+      color: #5b7fd4;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .description {
+      font-size: 14px;
+      color: #a0b0d0;
+      line-height: 1.7;
+      max-width: 540px;
+    }
+
+    .logo img {
+      height: 72px;
+      width: auto;
+      opacity: .85;
+      flex-shrink: 0;
+    }
+
+    /* ── Section labels ── */
+
+    .section-label {
+      font-size: 11px;
+      color: #3a4a6a;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-weight: 600;
+      width: 100%;
+      max-width: 860px;
+      margin-bottom: 14px;
+      margin-top: 40px;
+    }
+
+    /* ── Demo ── */
+
+    .demo-wrap {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .demo-search {
+      display: flex;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
-    .search-form input {
+    .demo-search input {
       flex: 1 1 260px;
-      padding: 0.55rem 0.8rem;
-      background: #1a2240;
-      border: 1px solid #2e3a5a;
-      border-radius: 6px;
+      padding: 8px 12px;
+      background: #0b1020;
+      border: 1px solid #1e2a45;
+      border-radius: 7px;
       color: #e8eaf0;
-      font-size: 0.95rem;
+      font-size: 13px;
       outline: none;
+      transition: border-color .15s;
     }
 
-    .search-form input:focus {
-      border-color: #4a6fa5;
-    }
+    .demo-search input:focus { border-color: #3a5aaa; }
+    .demo-search input::placeholder { color: #3a4a6a; }
 
-    .search-form select {
-      padding: 0.55rem 0.6rem;
-      background: #1a2240;
-      border: 1px solid #2e3a5a;
-      border-radius: 6px;
-      color: #e8eaf0;
-      font-size: 0.95rem;
+    .demo-search select {
+      padding: 8px 10px;
+      background: #0b1020;
+      border: 1px solid #1e2a45;
+      border-radius: 7px;
+      color: #a0b0d0;
+      font-size: 13px;
       outline: none;
       cursor: pointer;
     }
 
-    .search-form button {
-      padding: 0.55rem 1.2rem;
-      background: #3a5a9a;
-      border: none;
-      border-radius: 6px;
-      color: #fff;
-      font-size: 0.95rem;
+    .demo-search button {
+      padding: 8px 18px;
+      background: #1e2f5a;
+      border: 1px solid #3a5aaa;
+      border-radius: 7px;
+      color: #7eb8f7;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
+      transition: background .15s, border-color .15s;
     }
 
-    .search-form button:hover {
-      background: #4a6fba;
+    .demo-search button:hover {
+      background: #253870;
+      border-color: #5b7fd4;
     }
 
-    #search-result {
-      margin-top: 1.5rem;
-      max-width: 260px;
-    }
-
-    /* ── Part 2 — Examples ── */
-
-    .grid {
+    .demo-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1.25rem;
+      gap: 16px;
     }
 
     altered-card {
       border-radius: 8px;
       overflow: hidden;
     }
+
+    /* ── Usage blocks ── */
+
+    .usage-block {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .usage-option {
+      background: #0b1020;
+      border: 1px solid #1e2a45;
+      border-radius: 10px;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .usage-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #e8eaf0;
+    }
+
+    .usage-desc {
+      font-size: 13px;
+      color: #a0b0d0;
+    }
+
+    pre {
+      background: #060c1a;
+      border: 1px solid #1e2a45;
+      border-radius: 6px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      font: 13px/1.6 'Courier New', monospace;
+      color: #a0c8f0;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #1a2240;
+      border: 1px solid #2e3a5a;
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 11px;
+      color: #7eb8f7;
+      align-self: flex-start;
+    }
+
+    /* ── Attributes table ── */
+
+    .attr-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .attr-table th {
+      text-align: left;
+      padding: 6px 10px;
+      color: #5b7fd4;
+      font-size: 11px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid #1e2a45;
+    }
+
+    .attr-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #131c32;
+      color: #a0b0d0;
+      vertical-align: top;
+    }
+
+    .attr-table td:first-child {
+      color: #a0c8f0;
+      font-family: 'Courier New', monospace;
+      white-space: nowrap;
+    }
+
+    .attr-table td code {
+      background: #1a2240;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 12px;
+      color: #7eb8f7;
+    }
+
+    /* ── GitHub card ── */
+
+    .github-card {
+      width: 100%;
+      max-width: 860px;
+      background: #0b1020;
+      border: 1px solid #1e2a45;
+      border-radius: 10px;
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      text-decoration: none;
+      transition: border-color .15s, background .15s;
+    }
+
+    .github-card:hover {
+      background: #111828;
+      border-color: #3a5aaa;
+    }
+
+    .github-card-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .github-icon {
+      color: #5b7fd4;
+      flex-shrink: 0;
+    }
+
+    .github-card-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .github-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #e8eaf0;
+    }
+
+    .github-card-desc {
+      font-size: 13px;
+      color: #a0b0d0;
+      line-height: 1.5;
+    }
+
+    .github-card-arrow {
+      color: #3a4a6a;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ── Footer ── */
+
+    footer {
+      text-align: center;
+      padding: 48px 16px 28px;
+      font-size: 12px;
+      color: #3a4a6a;
+      line-height: 1.8;
+    }
+
+    footer a {
+      color: #5b7fd4;
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      .header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .logo img { height: 52px; }
+      .demo-grid { grid-template-columns: 1fr; max-width: 260px; margin: 0 auto; }
+      .github-card { flex-direction: column; align-items: flex-start; }
+      .github-card-arrow { display: none; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Part 1 — Card lookup -->
-  <section>
-    <h2>Card lookup</h2>
-    <div class="search-form">
-      <input id="card-ref" type="text" placeholder="Card reference — e.g. ALT_CORE_B_AX_04_U_10" spellcheck="false">
-      <select id="card-locale">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="title">Altered Card Renderer</div>
+      <div class="description">
+        A standalone JavaScript renderer for <strong style="color:#e8eaf0">Altered TCG</strong> cards.
+        Embed it on any page with a single <code style="background:#1a2240;border-radius:3px;padding:1px 6px;font-size:12px;color:#7eb8f7">&lt;script&gt;</code> tag —
+        no build step, no framework, no dependencies.
+        Fetches card data from the API and draws the full card into an HTML canvas.
+      </div>
+    </div>
+    <div class="logo">
+      <img src="https://altered-db.com/forge/assets/img/forge_logo.png" alt="Altered Card Forge">
+    </div>
+  </div>
+
+  <!-- Demo -->
+  <div class="section-label">Live demo</div>
+  <div class="demo-wrap">
+    <div class="demo-search">
+      <input id="demoRef" type="text" placeholder="Card reference — e.g. ALT_CORE_B_AX_07_U_8623" spellcheck="false">
+      <select id="demoLocale">
         <option value="en">EN</option>
         <option value="fr">FR</option>
         <option value="es">ES</option>
         <option value="it">IT</option>
         <option value="de">DE</option>
       </select>
-      <button id="card-search-btn">Show card</button>
+      <button id="demoBtn">Show card</button>
     </div>
-    <div id="search-result"></div>
-  </section>
-
-  <!-- Part 2 — Example cards -->
-  <section>
-    <h2>Examples</h2>
-    <div class="grid">
-      <altered-card ref="ALT_CORE_B_AX_04_U_10"></altered-card>
-      <altered-card ref="ALT_EOLE_B_OR_109_U_374"></altered-card>
-      <altered-card ref="ALT_DUSTER_B_AX_86_U_3590"></altered-card>
-      <altered-card ref="ALT_ALIZE_B_AX_39_U_7788"></altered-card>
-      <altered-card ref="ALT_BISE_B_AX_50_U_12676"></altered-card>
-      <altered-card ref="ALT_COREKS_B_AX_08_U_2868"></altered-card>
+    <div class="demo-grid" id="demoGrid">
+      <altered-card ref="ALT_CORE_B_AX_07_C"></altered-card>
+      <altered-card ref="ALT_CORE_B_AX_07_R2"></altered-card>
+      <altered-card ref="ALT_CORE_B_AX_07_U_8623"></altered-card>
     </div>
-  </section>
+  </div>
 
-  <script src="..\altered-card-renderer-minified.js"></script>
+  <!-- Usage -->
+  <div class="section-label">Embed on your page</div>
+  <div class="usage-block">
+
+    <div class="usage-option">
+      <div class="usage-title">Via jsDelivr — no hosting required</div>
+      <div class="usage-desc">Load directly from CDN. Drop the script tag anywhere, then use <code style="background:#1a2240;border-radius:3px;padding:1px 5px;font-size:12px;color:#7eb8f7">&lt;altered-card&gt;</code> wherever you want.</div>
+      <pre>&lt;script src="altered-card-renderer-minified.js"&gt;&lt;/script&gt;
+
+&lt;altered-card ref="ALT_CORE_B_AX_07_C"&gt;&lt;/altered-card&gt;
+&lt;altered-card ref="ALT_CORE_B_AX_07_U_8623" locale="fr"&gt;&lt;/altered-card&gt;</pre>
+      <span class="tag">zero hosting</span>
+    </div>
+
+    <div class="usage-option">
+      <div class="usage-title">Self-hosted</div>
+      <div class="usage-desc">Drop <code style="background:#1a2240;border-radius:3px;padding:1px 5px;font-size:12px;color:#7eb8f7">altered-card-renderer.js</code> on any static host. The card API and image CDN both expose <code style="background:#1a2240;border-radius:3px;padding:1px 5px;font-size:12px;color:#7eb8f7">Access-Control-Allow-Origin: *</code> — no server-side code needed.</div>
+      <pre>&lt;script src="/path/to/altered-card-renderer-minified.js"&gt;&lt;/script&gt;
+
+&lt;altered-card ref="ALT_CORE_B_AX_07_C"&gt;&lt;/altered-card&gt;
+&lt;altered-card ref="ALT_CORE_B_AX_07_U_8623" locale="en" collection="community"&gt;&lt;/altered-card&gt;</pre>
+      <span class="tag">static hosting</span>
+    </div>
+
+    <div class="usage-option">
+      <div class="usage-title">Attributes</div>
+      <table class="attr-table">
+        <tr>
+          <th>Attribute</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td>ref</td>
+          <td>—</td>
+          <td>Card reference, e.g. <code>ALT_CORE_B_AX_07_U_8623</code> (required)</td>
+        </tr>
+        <tr>
+          <td>locale</td>
+          <td><code>en</code></td>
+          <td>Language: <code>en</code>, <code>fr</code>, <code>es</code>, <code>it</code>, <code>de</code></td>
+        </tr>
+        <tr>
+          <td>collection</td>
+          <td><code>official</code></td>
+          <td>Frame set: <code>official</code> or <code>community</code></td>
+        </tr>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- GitHub -->
+  <div class="section-label">Source & documentation</div>
+  <a class="github-card" href="https://github.com/PolluxTroy0/Altered-Card-Renderer" target="_blank" rel="noopener">
+    <div class="github-card-left">
+      <svg class="github-icon" width="36" height="36" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      <div class="github-card-text">
+        <div class="github-card-title">PolluxTroy0 / Altered-Card-Renderer</div>
+        <div class="github-card-desc">
+          Full source code, releases, issue tracker, and complete documentation.<br>
+          Configuration reference, advanced usage, and more.
+        </div>
+      </div>
+    </div>
+    <div class="github-card-arrow">→</div>
+  </a>
+
+  <footer>
+    <div>Frames &amp; card artwork — <a href="https://altered.gg" target="_blank" rel="noopener">Equinox / Altered TCG</a></div>
+    <div>Unofficial community tool — not affiliated with Equinox.</div>
+  </footer>
+
+  <script src="altered-card-renderer-minified.js"></script>
   <script>
-    document.getElementById('card-search-btn').addEventListener('click', () => {
-      const ref    = document.getElementById('card-ref').value.trim();
-      const locale = document.getElementById('card-locale').value;
+    const grid   = document.getElementById('demoGrid');
+    const input  = document.getElementById('demoRef');
+    const locale = document.getElementById('demoLocale');
+    const btn    = document.getElementById('demoBtn');
+
+    function showCard() {
+      const ref = input.value.trim();
       if (!ref) return;
-
-      const container = document.getElementById('search-result');
-      container.innerHTML = '';
-
+      grid.innerHTML = '';
       const card = document.createElement('altered-card');
       card.setAttribute('ref', ref);
-      card.setAttribute('locale', locale);
-      container.appendChild(card);
-    });
+      card.setAttribute('locale', locale.value);
+      grid.appendChild(card);
+    }
 
-    document.getElementById('card-ref').addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('card-search-btn').click();
-    });
+    btn.addEventListener('click', showCard);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') showCard(); });
   </script>
 
 </body>
