@@ -47,32 +47,6 @@ The renderer loads card configs from `https://cdn.alteredcore.org/forge/` and fe
 
 ---
 
-## Self-hosting
-
-The renderer (`altered-card-renderer.js`) is a single vanilla JS file — no build step, no npm, no framework. It fetches card configs and assets from `https://cdn.alteredcore.org/forge/` automatically. The card API and image CDN both respond with `Access-Control-Allow-Origin: *`, so no server-side code is needed.
-
-### Static hosting
-
-Drop `altered-card-renderer.js` on any static host (GitHub Pages, Netlify, Apache, Nginx, shared host…).
-
-```html
-<script src="/path/to/altered-card-renderer-minified.js"></script>
-
-<altered-card ref="ALT_CORE_B_AX_04_U_10"></altered-card>
-```
-
-### jsDelivr (zero hosting)
-
-Load directly from the CDN — nothing to host or deploy.
-
-```html
-<script src="https://cdn.jsdelivr.net/gh/PolluxTroy0/Altered-Card-Renderer@main/altered-card-renderer-minified.js"></script>
-
-<altered-card ref="ALT_CORE_B_AX_04_U_10"></altered-card>
-```
-
----
-
 ## Configuration
 
 ### In `altered-card-renderer.js`
