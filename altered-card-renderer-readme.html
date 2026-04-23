@@ -115,11 +115,13 @@
 <span class="kw">&lt;altered-card</span> ref=<span class="str">"ALT_CORE_B_AX_04_U_10"</span><span class="kw">&gt;&lt;/altered-card&gt;</span>
 <span class="kw">&lt;altered-card</span> ref=<span class="str">"ALT_EOLE_B_OR_109_U_374"</span> locale=<span class="str">"fr"</span><span class="kw">&gt;&lt;/altered-card&gt;</span></code></pre>
 
+<!-- PROXY-HIDDEN
 <p>
   By default the renderer looks for <code>altered-card-renderer-proxy.php</code> in the same folder as
   <code>altered-card-renderer.js</code>, and loads card configs from <code>https://cdn.alteredcore.org/forge/</code>. No attributes
   needed for a standard setup. Override with <code>data-proxy</code> if your proxy is elsewhere.
 </p>
+PROXY-HIDDEN -->
 
 <p>Style it like any block element &#x2014; set a <code>width</code>, drop it in a flex row, a grid, an article. The canvas inside fills the element width and maintains the card aspect ratio automatically.</p>
 
@@ -132,7 +134,7 @@
 
 <table>
   <tr><th><code>&lt;script&gt;</code> attribute</th><th>Description</th></tr>
-  <tr><td><code>data-proxy</code></td><td>Override the proxy. <code>"https://…"</code> = explicit URL. <code>"false"</code> = no proxy, API called directly from the browser (requires the API to allow CORS). Omit to auto-detect <code>altered-card-renderer-proxy.php</code> next to the script.</td></tr>
+  <!-- PROXY-HIDDEN <tr><td><code>data-proxy</code></td><td>Override the proxy. <code>"https://…"</code> = explicit URL. <code>"false"</code> = no proxy, API called directly from the browser (requires the API to allow CORS). Omit to auto-detect <code>altered-card-renderer-proxy.php</code> next to the script.</td></tr> PROXY-HIDDEN -->
   <tr><td><code>data-config-base</code></td><td>Card config root URL. Defaults to <code>https://cdn.alteredcore.org/forge/</code> &#x2014; this CDN hosts all card configuration files (element positions, sizes, fonts, frame rules, biome images, etc.) with <code>Access-Control-Allow-Origin: *</code>.</td></tr>
 </table>
 
@@ -200,6 +202,7 @@
   which languages are available &mdash; it is used only for server-side logging / hints.
 </p>
 
+<!-- PROXY-HIDDEN
 <h3>Proxy support</h3>
 <p>
   Batch mode works through <code>altered-card-renderer-proxy.php</code> exactly like mode 1.
@@ -207,9 +210,10 @@
   to <code>/api/cards/batch</code> on the upstream API, and returns the JSON array unchanged.
 </p>
 <p>
-  Direct calls (no proxy, <code>data-proxy="false"</code>) are also supported &mdash; the API must then
+  Direct calls (no proxy, <code>data-proxy="false"</code>) are also supported — the API must then
   allow <code>POST</code> CORS requests from the browser.
 </p>
+PROXY-HIDDEN -->
 
 <table>
   <tr><th>Mode</th><th>API calls</th><th>When to use</th></tr>
@@ -507,7 +511,7 @@ originalParent.<span class="fn">insertBefore</span>(cardEl, placeholder);</code>
 
 <table>
   <tr><th>Field</th><th>Description</th></tr>
-  <tr><td><code>forge.lang</code></td><td>Auto-injected by <code>altered-card-renderer-proxy.php</code> from the <code>locale</code> URL parameter. Falls back to <code>"en"</code> if absent. No need to set manually when using the proxy.</td></tr>
+  <!-- PROXY-HIDDEN <tr><td><code>forge.lang</code></td><td>Auto-injected by <code>altered-card-renderer-proxy.php</code> from the <code>locale</code> URL parameter. Falls back to <code>"en"</code> if absent. No need to set manually when using the proxy.</td></tr> PROXY-HIDDEN -->
   <tr><td><code>forge.frameType</code></td><td>Override the frame auto-selection (<code>FRAME_AUTO_SELECT</code> in <code>altered-card-renderer.js</code>). If absent, the frame is chosen automatically based on rarity and card content.</td></tr>
   <tr><td><code>forge.collection</code></td><td>Override the frame collection. Defaults to <code>DEFAULT_COLLECTION</code> in <code>altered-card-renderer.js</code> (<code>"official"</code>).</td></tr>
   <tr><td><code>forge.bgTransform</code></td><td>If absent, defaults from <code>API_MAPPING</code> apply (<code>zoom: 120, x: 50, y: 50, flipX: false</code>). Individual sub-fields can be omitted.</td></tr>
@@ -859,6 +863,7 @@ document.body.<span class="fn">appendChild</span>(slot);
 
 
 <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- PROXY-HIDDEN
 <h2>CORS &amp; PHP proxy</h2>
 
 <p>
@@ -873,34 +878,26 @@ document.body.<span class="fn">appendChild</span>(slot);
 <table>
   <tr><th>Usage</th><th>Description</th></tr>
   <tr>
-    <td><code>altered-card-renderer-proxy.php?ref=ALT_CORE_B_AX_04_U_10&amp;locale=fr</code></td>
+    <td>altered-card-renderer-proxy.php?ref=ALT_CORE_B_AX_04_U_10&amp;locale=fr</td>
     <td>Fetches and returns the card JSON from the upstream API.</td>
   </tr>
   <tr>
-    <td><code>altered-card-renderer-proxy.php?img=https://s3.amazonaws.com/…/card.jpg</code></td>
-    <td>Fetches and returns an image (whitelisted domains only). Use this to replace <code>assets[]</code> URLs before passing to <code>mountFromApi()</code>.</td>
+    <td>altered-card-renderer-proxy.php?img=https://s3.amazonaws.com/.../card.jpg</td>
+    <td>Fetches and returns an image (whitelisted domains only). Use this to replace assets[] URLs before passing to mountFromApi().</td>
   </tr>
 </table>
 
-<pre><code><span class="cm">// Transform assets[] through the proxy before rendering:</span>
-<span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"altered-card-renderer-proxy.php?ref=ALT_CORE_B_AX_04_U_10&amp;locale=fr"</span>).<span class="fn">then</span>(r =&gt; r.<span class="fn">json</span>());
-<span class="kw">if</span> (Array.<span class="fn">isArray</span>(data.assets))
-  data.assets = data.assets.<span class="fn">map</span>(u =&gt; <span class="str">`altered-card-renderer-proxy.php?img=${<span class="fn">encodeURIComponent</span>(u)}`</span>);
-data.forge = { frameType: <span class="str">"char_u_1"</span> }; <span class="cm">// forge.lang injected automatically by the proxy</span>
-<span class="kw">await</span> <span class="fn">AlteredRender</span>.<span class="fn">mountFromApi</span>(slot, data);</code></pre>
-
-<div class="box info">
-  The card API URL is configured once in <code>CARD_API_URL</code> at the top of the renderer and passed to the proxy automatically.
-  Both image and API domains are validated against whitelists (<code>$ALLOWED_IMG_DOMAINS</code>, <code>$ALLOWED_API_DOMAINS</code>)
-  at the top of <code>altered-card-renderer-proxy.php</code> to prevent SSRF attacks.
-</div>
+The card API URL is configured once in CARD_API_URL at the top of the renderer and passed to the proxy automatically.
+Both image and API domains are validated against whitelists ($ALLOWED_IMG_DOMAINS, $ALLOWED_API_DOMAINS)
+at the top of altered-card-renderer-proxy.php to prevent SSRF attacks.
+PROXY-HIDDEN -->
 
 <h2>Files</h2>
 
 <table>
   <tr><th>File</th><th>Role</th></tr>
   <tr><td><code>altered-card-renderer.js</code></td><td>The renderer. Include via <code>&lt;script&gt;</code>. Set <code>CARD_API_URL</code> at the top for the card data API.</td></tr>
-  <tr><td><code>altered-card-renderer-proxy.php</code></td><td>PHP proxy for card JSON and images (CORS bypass). Placed alongside the renderer.</td></tr>
+  <!-- PROXY-HIDDEN <tr><td><code>altered-card-renderer-proxy.php</code></td><td>PHP proxy for card JSON and images (CORS bypass). Placed alongside the renderer.</td></tr> PROXY-HIDDEN -->
   <tr><td><code>index.html</code></td><td>Interactive demo with JSON drop zone.</td></tr>
   <tr><td><code>altered-card-renderer-example.html</code></td><td>Minimal usage example with live API cards.</td></tr>
   <tr><td><code>altered-card-renderer-card.json</code></td><td>Sample card JSON — shows the expected API response format.</td></tr>
