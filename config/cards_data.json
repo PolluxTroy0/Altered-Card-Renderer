@@ -1,0 +1,11 @@
+{
+  "_comment": "Per-card forge overrides. Applied on top of all other settings for matching cards. Keys: exact reference (ALT_CORE_B_AX_04_U_10) or prefix wildcard ending with * (ALT_ALIZE_B_AX_*). Wildcard matches any card whose reference starts with the prefix. When multiple patterns match, they are applied from least specific (shortest prefix) to most specific (longest prefix / exact match), so the most specific always wins. Values are deep-merged into the card's forge section — only the fields you specify are overridden.",
+
+  "_example_exact": {
+    "bgTransform": { "zoom": 145, "x": 55, "y": 40 }
+  },
+
+  "_example_prefix": {
+    "bgTransform": { "zoom": 130, "x": 50, "y": 45 }
+  }
+}
