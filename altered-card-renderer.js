@@ -454,8 +454,8 @@
         return Array.isArray(e) ? e.map(s => _loc(s, lang)).filter(Boolean).join("\n") : (_loc(e, lang) || null);
       },
       cardId:        d => {
-        // Derive collector info: set.code + faction-number-rarity-collector
-        // e.g. ALT_EOLE_B_OR_109_U_374 + set.code=ROC → ROC-OR-109-U-374
+        if (d.collectorNumberFormatedId) return d.collectorNumberFormatedId;
+        // Fallback: derive from reference — e.g. ALT_EOLE_B_OR_109_U_374 + set.code=ROC → ROC-OR-109-U-374
         const parts     = (d.reference ?? "").split("_");
         const collector = parts.length >= 6 ? parts.slice(3).join("-") : (d.reference ?? "");
         const setCode   = d.set?.code ?? "";
