@@ -13,7 +13,7 @@
   // URL of the card data API. {ref} and {locale} are substituted at runtime.
   // Overridden at build time by build_renderer_for_github.py (value from config/core.json).
   // Can also be set via config/core.json > cardApiUrl at runtime (non-embedded mode).
-  const CARD_API_URL = "https://cards.alteredcore.org/api/cards/reference/{ref}?locale={locale}";
+  const CARD_API_URL = "https://cards.alteredcore.org/api/cards?reference={ref}&locale={locale}";
 
   // ── EXTERNAL RESOURCES ────────────────────────────────────────
   // Edit these paths to match your deployment.
