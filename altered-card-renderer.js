@@ -346,7 +346,8 @@
   const API_QR_CODE = {
     visible: true,
     //url:     "https://altered.gg/{locale}/cards/{reference}",
-    url:     "https://alteredcore.org/pages/card?ref={reference}&card_lang={lang}",
+    //url:     "https://alteredcore.org/pages/card?ref={reference}&card_lang={lang}",
+    url:     "https://qr.alteredcore.org?r={reference}&l={lang}",
     vars: {
       reference: "reference",
       locale:    (_d, lang) => ({ en: "en-us", fr: "fr-fr", es: "es-es", it: "it-it", de: "de-de" }[lang] ?? "en-us"),
