@@ -138,8 +138,16 @@
     }
 
     altered-card {
+      display: block;
+      width: 100%;
       border-radius: 8px;
       overflow: hidden;
+    }
+
+    altered-card canvas {
+      display: block;
+      width: 100%;
+      height: auto;
     }
 
     /* ── Usage blocks ── */
@@ -310,7 +318,7 @@
     @media (max-width: 640px) {
       .header { flex-direction: column; align-items: flex-start; gap: 16px; }
       .logo img { height: 52px; }
-      .demo-grid { grid-template-columns: 1fr; max-width: 260px; margin: 0 auto; }
+      .demo-grid { grid-template-columns: 1fr; max-width: 340px; margin: 0 auto; }
       .github-card { flex-direction: column; align-items: flex-start; }
       .github-card-arrow { display: none; }
     }

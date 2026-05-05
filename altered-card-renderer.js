@@ -1130,8 +1130,11 @@
     }
 
     // ── Biome bgVariant auto-detection ───────────────────────────
-    // Compute bgVariant for each biome from its numeric value.
-    // zero=0, best=highest (ties allowed), normal=everything else.
+    // Rules (applied per-biome, comparing all 3 values together):
+    //   zero   : value == 0
+    //   best   : unique max AND at least 2 non-zero biomes
+    //   small  : unique min (non-zero) AND no biome is at zero
+    //   normal : everything else
     if (BIOME_VARIANT_AUTO) {
       const nums = {};
       for (const [elId, path] of Object.entries(BIOME_VARIANT_AUTO)) {
@@ -1139,11 +1142,20 @@
         const raw = _resolve(path, apiJson, lang);
         nums[elId] = raw != null ? Number(raw) : null;
       }
-      const defined = Object.values(nums).filter(v => v != null);
-      const maxVal  = defined.length ? Math.max(...defined) : null;
+      const defined   = Object.values(nums).filter(v => v != null);
+      const nonZero   = defined.filter(v => v > 0);
+      const maxVal    = defined.length ? Math.max(...defined) : null;
+      const minVal    = nonZero.length ? Math.min(...nonZero) : null;
+      const maxCount  = defined.filter(v => v === maxVal).length;
+      const minCount  = nonZero.filter(v => v === minVal).length;
+      const allNonZero = defined.length > 0 && !defined.some(v => v === 0);
       for (const [elId, val] of Object.entries(nums)) {
         if (val == null) continue;
-        const variant = val === 0 ? "zero" : (val === maxVal ? "best" : "normal");
+        let variant;
+        if (val === 0)                                              variant = "zero";
+        else if (val === maxVal && maxCount === 1 && nonZero.length >= 2) variant = "best";
+        else if (val === minVal && minCount === 1 && allNonZero)   variant = "small";
+        else                                                        variant = "normal";
         if (globalDefaults[elId]) {
           globalDefaults[elId].bgVariant = variant;
         } else {
