@@ -61,6 +61,7 @@
     //   {framesuffix} → last 2 chars of the active frame filename   (e.g. T1, T2)
     // Example: "https://cdn.example.com/cards/{faction}/{rarity}/{ref}_{locale}.webp"
     backgroundUrl: "https://cdn.alteredcore.org/illustrations/{set}/{bgref}_FRAMELESS_{framesuffix}.webp",
+    backgroundUrlBkp: "https://cdn.alteredcore.org/cards/assets/{set}/{id}.webp",
 
     // Optional transforms applied to {id} before substitution in backgroundUrl.
     // Format: array of [regexPattern, replacement] pairs — applied in order.
@@ -1075,7 +1076,7 @@
         : type;
 
     // ── Background image URL ──────────────────────────────────────
-    let bgUrl;
+    let bgUrl, bgBkpUrl;
     if (_opts.useApiBackground === false && _opts.backgroundUrl) {
       const rarityRef   = apiJson.cardRarity?.reference ?? apiJson.rarity?.reference ?? "";
       const rarityShort = { COMMON: "C", RARE: "R", UNIQUE: "U", EXALTED: "E" }[rarityRef] ?? rarityRef;
@@ -1115,6 +1116,25 @@
       // Proxy the custom URL if a proxy is in use (CORS)
       const proxy = _opts._resolvedProxy;
       bgUrl = (proxy && rawUrl) ? proxy + "?img=" + encodeURIComponent(rawUrl) : rawUrl;
+      // Backup URL — used if the primary fails to load
+      if (_opts.backgroundUrlBkp) {
+        let cardIdBkp = apiJson.reference ?? "";
+        if (_opts.backgroundUrlIdTransform) {
+          for (const [pat, rep] of _opts.backgroundUrlIdTransform) {
+            cardIdBkp = cardIdBkp.replace(new RegExp(pat), rep);
+          }
+        }
+        const rawBkp = _opts.backgroundUrlBkp
+          .replace("{ref}",         apiJson.reference ?? "")
+          .replace("{locale}",      lang)
+          .replace("{faction}",     factionCode)
+          .replace("{rarity}",      rarityShort)
+          .replace("{id}",          cardIdBkp)
+          .replace("{set}",         apiJson.set?.reference ?? "")
+          .replace("{bgref}",       bgref)
+          .replace("{framesuffix}", framesuffix);
+        bgBkpUrl = (proxy && rawBkp) ? proxy + "?img=" + encodeURIComponent(rawBkp) : rawBkp;
+      }
     } else {
       bgUrl = mapping.background != null
         ? _resolve(mapping.background, apiJson, lang)
@@ -1222,7 +1242,7 @@
       globalDefaults,
     };
 
-    if (bgUrl) cardJson._urls = { bg: bgUrl };
+    if (bgUrl || bgBkpUrl) cardJson._urls = { bg: bgUrl || null, bgBkp: bgBkpUrl || null };
 
     return cardJson;
   }
@@ -1400,6 +1420,7 @@
     // ── Background ───────────────────────────────────────────────
     jobs.push(
       loadImg(imgs.bg || urls.bg || null)
+        .then(img => img || loadImg(urls.bgBkp || null))
         .then(img => { state.images.bg = img; })
     );
 
