@@ -431,7 +431,7 @@
     // x / y = focal point in % (50/50 = center).
     // flipX = mirror the image horizontally.
     bgTransform: (d) => ({
-      zoom:  d.forge?.bgTransform?.zoom  ?? 130,
+      zoom:  d.forge?.bgTransform?.zoom  ?? 100,
       x:     d.forge?.bgTransform?.x     ?? 50,
       y:     d.forge?.bgTransform?.y     ?? 50,
       flipX: d.forge?.bgTransform?.flipX ?? false,
