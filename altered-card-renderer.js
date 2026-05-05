@@ -51,14 +51,16 @@
     // Custom background URL template — used only when useApiBackground is false.
     // Browse available images: https://cdn.alteredcore.org
     // Available variables (substituted at runtime from the API response):
-    //   {ref}     → full card reference  (e.g. ALT_CORE_B_AX_04_U_10)
-    //   {locale}  → language code        (e.g. en, fr)
-    //   {faction} → faction short code   (e.g. AX, BR, LY, MU, OR, YZ)
-    //   {rarity}  → rarity short code    (e.g. C, R, U, E)
-    //   {set}     → set reference        (e.g. CORE, EOLE, DUSTER)
-    //   {id}      → card unique ID from the API
+    //   {ref}         → full card reference       (e.g. ALT_ALIZE_A_AX_35_R1)
+    //   {locale}      → language code             (e.g. en, fr)
+    //   {faction}     → faction short code        (e.g. AX, BR, LY, MU, OR, YZ)
+    //   {rarity}      → rarity short code         (e.g. C, R, U, E)
+    //   {set}         → set reference             (e.g. CORE, ALIZE, DUSTER)
+    //   {id}          → card unique ID from the API (transformed by backgroundUrlIdTransform)
+    //   {bgref}       → ref truncated to 5 parts + 1st char of 6th (e.g. ALT_ALIZE_A_AX_35_R)
+    //   {framesuffix} → last 2 chars of the active frame filename   (e.g. T1, T2)
     // Example: "https://cdn.example.com/cards/{faction}/{rarity}/{ref}_{locale}.webp"
-    backgroundUrl: "https://cdn.alteredcore.org/cards/assets/{set}/{id}.webp",
+    backgroundUrl: "https://cdn.alteredcore.org/illustrations/{set}/{bgref}_FRAMELESS_{framesuffix}.webp",
 
     // Optional transforms applied to {id} before substitution in backgroundUrl.
     // Format: array of [regexPattern, replacement] pairs — applied in order.
@@ -1082,13 +1084,32 @@
           cardId = cardId.replace(new RegExp(pat), rep);
         }
       }
+      // {bgref} — reference truncated to 5 parts + first char of 6th
+      // e.g. ALT_ALIZE_A_AX_35_R1 → ALT_ALIZE_A_AX_35_R
+      const refParts = (apiJson.reference ?? "").split("_");
+      const bgref = refParts.length >= 6
+        ? refParts.slice(0, 5).join("_") + "_" + refParts[5].charAt(0)
+        : (apiJson.reference ?? "");
+      // {framesuffix} — last 2 chars of the active frame filename (e.g. T1, T2)
+      const factionCfg = _cfg?.factions?.[sel.faction] || {};
+      let resolvedTypeCfg = factionCfg.types?.[internalType] || null;
+      if (!resolvedTypeCfg && internalType?.includes("::")) {
+        const [col, ftKey] = internalType.split("::");
+        resolvedTypeCfg = Object.values(factionCfg.types || {}).find(
+          t => t.collection === col && t.frameType === ftKey
+        ) || null;
+      }
+      const frameBase    = (resolvedTypeCfg?.frameFile || "").split("/").pop().replace(/\.[^.]+$/, "");
+      const framesuffix  = frameBase.slice(-2);
       let rawUrl = _opts.backgroundUrl
-        .replace("{ref}",     apiJson.reference ?? "")
-        .replace("{locale}",  lang)
-        .replace("{faction}", factionCode)
-        .replace("{rarity}",  rarityShort)
-        .replace("{id}",      cardId)
-        .replace("{set}",     apiJson.set?.reference ?? "");
+        .replace("{ref}",         apiJson.reference ?? "")
+        .replace("{locale}",      lang)
+        .replace("{faction}",     factionCode)
+        .replace("{rarity}",      rarityShort)
+        .replace("{id}",          cardId)
+        .replace("{set}",         apiJson.set?.reference ?? "")
+        .replace("{bgref}",       bgref)
+        .replace("{framesuffix}", framesuffix);
       // Proxy the custom URL if a proxy is in use (CORS)
       const proxy = _opts._resolvedProxy;
       bgUrl = (proxy && rawUrl) ? proxy + "?img=" + encodeURIComponent(rawUrl) : rawUrl;
