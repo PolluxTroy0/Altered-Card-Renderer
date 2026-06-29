@@ -11,9 +11,72 @@
 
   // ── CARD API URL ──────────────────────────────────────────────
   // URL of the card data API. {ref} and {locale} are substituted at runtime.
-  // Overridden at build time by build_renderer_for_github.py (value from config/core.json).
   // Can also be set via config/core.json > cardApiUrl at runtime (non-embedded mode).
   const CARD_API_URL = "https://cards.alteredcore.org/api/cards?reference={ref}&locale={locale}";
+
+  // ── CARD API RESPONSE FORMAT ──────────────────────────────────
+  // Shape of the JSON the API must return for mountFromApi() to render a card.
+  // The field names below are the DEFAULTS read by API_MAPPING — if your API
+  // differs, adapt the dot-paths/functions in API_MAPPING rather than the API.
+  //
+  // Localized text fields (name, mainEffect, echoEffect, cardType.name,
+  // cardSubTypes[].name) accept EITHER a plain string (single-locale API,
+  // e.g. ?locale=fr) OR a localized object { "fr": "…", "en": "…" }. When an
+  // object is given, the language is picked from forge.lang (fallback "en").
+  //
+  // Only `reference` is strictly required; every other field is optional and,
+  // when absent, hides its element or falls back (see API_MAPPING for each).
+  //
+  // {
+  //   // ── Identity (required) ──────────────────────────────────────
+  //   "reference": "ALT_ALIZE_A_AX_35_R1",   // full card ref — drives bg URL, QR, _ref, cardId fallback
+  //
+  //   // ── Localized text ───────────────────────────────────────────
+  //   "name":       { "fr": "Nom", "en": "Name" },   // → cardName  (or plain "Name")
+  //   "mainEffect": { "fr": "…",   "en": "…" },       // → effects   (richtext: supports {R}{J}… tokens, #gold#, [kw], (italic), [[link]], double-space=newline)
+  //   "echoEffect": { "fr": "…",   "en": "…" },       // → discardEffects — string OR array of strings; null/[]/absent ⇒ no discard effect
+  //
+  //   // ── Numbers ──────────────────────────────────────────────────
+  //   "mainCost":      3,   // → handCost
+  //   "recallCost":    1,   // → reserveCost
+  //   "forestPower":   2,   // → forestValue   ┐ biome bgVariant (zero/best/small/normal)
+  //   "mountainPower": 1,   // → mountainValue ├ is auto-computed from these three
+  //   "oceanPower":    0,   // → oceanValue    ┘
+  //
+  //   // ── Collector number ─────────────────────────────────────────
+  //   "collectorNumberFormatedId": "ROC-OR-109-U-374",  // → cardId; if absent, derived from reference + set.code
+  //
+  //   // ── Classification objects ───────────────────────────────────
+  //   "faction":    { "name": "Axiom", "code": "AX" },              // name → frame faction; code → bg URL {faction}
+  //   "cardType":   { "reference": "CHARACTER", "name": "Character" }, // reference: CHARACTER|PERMANENT|SPELL|TOKEN|HERO|EXPEDITION_PERMANENT
+  //   "cardSubTypes": [ { "reference": "EXPEDITION", "name": "Expedition" } ],  // array; reference drives expperm_ frames
+  //   "cardRarity": { "reference": "RARE" },                        // COMMON|RARE|UNIQUE|EXALTED — drives frame + assets[] index
+  //   "set":        { "reference": "ALIZE", "code": "ROC" },        // reference → bg URL {set} + setLogo; code → cardId / logo match
+  //
+  //   // ── Illustration ─────────────────────────────────────────────
+  //   // Used only when RESOURCES.useApiBackground = true (otherwise the bg URL
+  //   // is built from RESOURCES.backgroundUrl and these are ignored).
+  //   "assets":    [ "url-common", "url-rare", "url-unique" ],  // indexed by rarity: COMMON→0, RARE→1, UNIQUE→2 (RARITY_ASSET_INDEX)
+  //   "imagePath": { "fr": "url", "en": "url" },                // fallback when assets[] absent — string or localized object
+  //
+  //   // ── Credits ──────────────────────────────────────────────────
+  //   "artists": [ { "name": "Artist Name" } ],   // → artistName (first entry)
+  //
+  //   // ── forge: render hints added by the API (all optional) ──────
+  //   "forge": {
+  //     "lang":       "en",          // language used to resolve localized objects above (fallback "en")
+  //     "collection": "official",    // frame collection key (default DEFAULT_COLLECTION)
+  //     "frameType":  "char_r_1",    // explicit frame; if absent, auto-picked via FRAME_AUTO_SELECT (rarity + effect length)
+  //     "bgTransform": { "zoom": 110, "x": 50, "y": 50, "flipX": false }  // illustration crop/focal/mirror
+  //   }
+  // }
+  //
+  // Notes:
+  //   • Rarity fallbacks: cardRarity.reference → rarity.reference → cardGroup.rarity.reference.
+  //   • In FETCH_MODE 2 the batch endpoint returns an array (or map) of these
+  //     objects, keyed/matched by `reference`.
+  //   • Per-card overrides from config/cards_data.json are deep-merged into
+  //     `forge` (matched on `reference`) before rendering.
 
   // ── EXTERNAL RESOURCES ────────────────────────────────────────
   // Edit these paths to match your deployment.
@@ -22,7 +85,10 @@
     // Base URL where the forge files are served.
     // Trailing slash is optional — it is added automatically.
     // Examples: "https://forge.example.com/"  |  "/forge/"  |  ""
-    configBaseUrl: "https://cdn.alteredcore.org/forge/",
+    // When embedded in the altered-card-forge plugin, index.php sets
+    // window.FORGE_BASE so standalone <altered-card> embeds resolve config
+    // and assets from the plugin folder; otherwise the CDN is used.
+    configBaseUrl: (typeof window !== "undefined" && window.FORGE_BASE) || "https://cdn.alteredcore.org/forge/",
 
     // Path to config/index.json (relative to configBaseUrl)
     configIndex: "config/index.json",
