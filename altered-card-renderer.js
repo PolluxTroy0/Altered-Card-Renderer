@@ -1648,7 +1648,7 @@
           height:       256,
           colorDark:    "#000000",
           colorLight:   "#ffffff",
-          correctLevel: QRCode.CorrectLevel.H, // eslint-disable-line no-undef
+          correctLevel: QRCode.CorrectLevel.M, // eslint-disable-line no-undef
         });
 
         const model = qr._oQRCode;
