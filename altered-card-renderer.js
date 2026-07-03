@@ -413,9 +413,14 @@
   //   Add any field from the API JSON as a new variable here.
   const API_QR_CODE = {
     visible: true,
+    // Longueur du nonce aléatoire injecté via le placeholder {nonce}.
+    // Le nonce est une chaîne base64 régénérée à CHAQUE rendu du QR
+    // (anti-cache / QR unique). Mets 0 pour le désactiver.
+    nonceLength: 10,
     //url:     "https://altered.gg/{locale}/cards/{reference}",
     //url:     "https://alteredcore.org/pages/card?ref={reference}&card_lang={lang}",
-    url:     "https://qr.alteredcore.org?r={reference}&l={lang}",
+    //url:     "https://qr.alteredcore.org?r={reference}&l={lang}",
+    url:     "{reference}-{nonce}",
     vars: {
       reference: "reference",
       locale:    (_d, lang) => ({ en: "en-us", fr: "fr-fr", es: "es-es", it: "it-it", de: "de-de" }[lang] ?? "en-us"),
@@ -424,6 +429,24 @@
     },
   };
   // ─────────────────────────────────────────────────────────────────
+
+  // Génère un nonce base64 aléatoire de `len` caractères.
+  // Utilisé pour le placeholder {nonce} de l'URL du QR (API_QR_CODE).
+  // Alphabet base64 standard. Pour une version URL-safe, remplacer "+/" par "-_".
+  function _makeNonce(len) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const n = Math.max(0, len | 0);
+    if (n === 0) return "";
+    let out = "";
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+      const buf = new Uint32Array(n);
+      crypto.getRandomValues(buf);
+      for (let i = 0; i < n; i++) out += chars[buf[i] % chars.length];
+    } else {
+      for (let i = 0; i < n; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return out;
+  }
 
   // Default mapping used by mountFromApi() when no mapping is passed.
   // Adapt this block to match the field structure of your external API.
@@ -1314,6 +1337,8 @@
           const v = _resolve(path, apiJson, lang);
           vars[k] = v != null ? String(v) : "";
         }
+        // Nonce base64 aléatoire — régénéré à chaque rendu (placeholder {nonce}).
+        vars.nonce = _makeNonce(API_QR_CODE.nonceLength ?? 10);
         qrEntry.url = API_QR_CODE.url.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
       }
 
