@@ -2863,7 +2863,7 @@
             const size = (s.size / 100) * CARD_W;
             const x    = (s.x    / 100) * CARD_W;
             const y    = (s.y    / 100) * CARD_H;
-            const pad  = size * 0.06;                 // recouvre l'ancien QR (pas de liseré)
+            const pad  = 0;                           // 0 = contour identique au mode classique
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(x - size/2 - pad, y - size/2 - pad, size + 2*pad, size + 2*pad);
             ctx.drawImage(qrImg, x - size/2, y - size/2, size, size);
