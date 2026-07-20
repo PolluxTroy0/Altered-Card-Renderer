@@ -131,6 +131,13 @@
     backgroundUrl: "https://cdn.alteredcore.org/{imgfolder}/{set}/{bgref}_FRAMELESS_{framesuffix}.{imgext}",
     backgroundUrlBkp: "https://cdn.alteredcore.org/cards/assets/{set}/{id}.webp",
 
+    // Image FINALE déjà générée de la carte (cadre + textes + QR imprimés).
+    // Utilisée par le mode <altered-card mode="qrcode"> pour recouvrir le QR
+    // officiel par un QR régénéré, sans appeler l'API.
+    // Placeholders : {locale} (= lang, ex. fr), {set}, {reference}, {imgext}.
+    // Surchargeable via config/core.json > "fullCardUrl".
+    fullCardUrl: "https://cdn.alteredcore.org/cards/{locale}/{set}/{reference}.{imgext}",
+
     // Optional transforms applied to {id} before substitution in backgroundUrl.
     // Format: array of [regexPattern, replacement] pairs — applied in order.
     // Example:
@@ -243,6 +250,27 @@
     "UNIQUE": 2,
   };
   // ─────────────────────────────────────────────────────────────────
+
+  // ── RARITY → SHORT CODE ──────────────────────────────────────────
+  // Maps cardRarity.reference to the short code used in card references
+  // and CDN URLs (e.g. ALT_ALIZE_A_AX_35_C → "C"). Single source of truth.
+  const RARITY_SHORT = { COMMON: "C", RARE: "R", UNIQUE: "U", EXALTED: "E" };
+  // Reverse map (short → reference), derived so both stay in sync.
+  const RARITY_FROM_SHORT = Object.fromEntries(
+    Object.entries(RARITY_SHORT).map(([ref, short]) => [short, ref])
+  );
+  // ─────────────────────────────────────────────────────────────────
+
+  // Image quality folder/extension, driven by ?q=hd in the page URL.
+  // { imgFolder: "illustrations"|"illustrations_hd", imgExt: "webp"|"jpg" }
+  function _imgQuality() {
+    const isHd = (typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("q") === "hd");
+    return {
+      imgFolder: isHd ? "illustrations_hd" : "illustrations",
+      imgExt:    isHd ? "jpg" : "webp",
+    };
+  }
 
   // Helper used by API_MAPPING: resolves a field that is either a plain
   // string (locale API, e.g. ?locale=fr) or a localized object { fr, en }.
@@ -417,10 +445,17 @@
     // Le nonce est une chaîne base64 régénérée à CHAQUE rendu du QR
     // (anti-cache / QR unique). Mets 0 pour le désactiver.
     nonceLength: 10,
+
+    // Raretés qui n'ont PAS de nonce (comparaison insensible à la casse,
+    // sur cardRarity.reference). Ces cartes utilisent `urlNoNonce` ci-dessous.
+    noNonceRarities: ["UNIQUE"],
+
     //url:     "https://altered.gg/{locale}/cards/{reference}",
     //url:     "https://alteredcore.org/pages/card?ref={reference}&card_lang={lang}",
-    //url:     "https://qr.alteredcore.org?r={reference}&l={lang}",
-    url:     "{reference}-{nonce}",
+    //url:     "https://qr.alteredcore.org?r={reference}-{nonce}&l={lang}",
+    url:     "{reference}-{nonce}",   // cartes normales (COMMON, RARE, EXALTED…)
+    urlNoNonce: "{reference}",        // cartes UNIQUE → référence seule, sans nonce
+
     vars: {
       reference: "reference",
       locale:    (_d, lang) => ({ en: "en-us", fr: "fr-fr", es: "es-es", it: "it-it", de: "de-de" }[lang] ?? "en-us"),
@@ -446,6 +481,49 @@
       for (let i = 0; i < n; i++) out += chars[Math.floor(Math.random() * chars.length)];
     }
     return out;
+  }
+
+  // Construit l'entrée QR ({ url, visible }) d'une carte à partir d'API_QR_CODE.
+  // `dataLike` doit exposer les champs référencés par API_QR_CODE.vars (au moins
+  // `reference`) + un chemin de rareté (cardRarity.reference). Réutilisé par
+  // _apiToCardJson (JSON API complet) ET par le mode overlay "qrcode"
+  // (objet minimal { reference, cardRarity }). Gère nonce + exclusion de rareté.
+  function _buildQrEntry(dataLike, lang) {
+    const entry = {};
+    if (!API_QR_CODE) return entry;
+
+    if (API_QR_CODE.url != null) {
+      // Rareté de la carte → détermine si on ajoute un nonce ou non.
+      const rarityRef = String(
+        dataLike.cardRarity?.reference ??
+        dataLike.rarity?.reference ??
+        dataLike.cardGroup?.rarity?.reference ?? ""
+      ).toUpperCase();
+      const skipNonce = (API_QR_CODE.noNonceRarities || [])
+        .some(r => String(r).toUpperCase() === rarityRef);
+
+      // Les cartes sans nonce (UNIQUE) utilisent leur propre template.
+      const template = skipNonce
+        ? (API_QR_CODE.urlNoNonce ?? API_QR_CODE.url)
+        : API_QR_CODE.url;
+
+      // Résout les variables du template depuis dataLike.
+      const vars = {};
+      for (const [k, path] of Object.entries(API_QR_CODE.vars || {})) {
+        const v = _resolve(path, dataLike, lang);
+        vars[k] = v != null ? String(v) : "";
+      }
+      // Nonce régénéré à chaque rendu (placeholder {nonce}) ; vide pour noNonceRarities.
+      vars.nonce = skipNonce ? "" : _makeNonce(API_QR_CODE.nonceLength ?? 10);
+
+      entry.url = template.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
+    }
+
+    if (API_QR_CODE.visible != null) {
+      entry.visible = Boolean(API_QR_CODE.visible);
+    }
+
+    return entry;
   }
 
   // Default mapping used by mountFromApi() when no mapping is passed.
@@ -853,7 +931,8 @@
   async function _loadConfig() {
     if (_opts.embeddedConfig) {
       const config = _opts.embeddedConfig;
-      if (config.cardApiUrl) RESOURCES.cardApiUrl = config.cardApiUrl;
+      if (config.cardApiUrl)  RESOURCES.cardApiUrl  = config.cardApiUrl;
+      if (config.fullCardUrl) RESOURCES.fullCardUrl = config.fullCardUrl;
       return config;
     }
 
@@ -909,7 +988,8 @@
       }
     }
 
-    if (config.cardApiUrl) RESOURCES.cardApiUrl = config.cardApiUrl;
+    if (config.cardApiUrl)  RESOURCES.cardApiUrl  = config.cardApiUrl;
+    if (config.fullCardUrl) RESOURCES.fullCardUrl = config.fullCardUrl;
 
     // Load cards_data.json separately — stored as config.cardsData, not merged
     const cardsFiles = index.cards || [];
@@ -1171,7 +1251,7 @@
     let bgUrl, bgMidUrl, bgBkpUrl;
     if (_opts.useApiBackground === false && _opts.backgroundUrl) {
       const rarityRef   = apiJson.cardRarity?.reference ?? apiJson.rarity?.reference ?? "";
-      const rarityShort = { COMMON: "C", RARE: "R", UNIQUE: "U", EXALTED: "E" }[rarityRef] ?? rarityRef;
+      const rarityShort = RARITY_SHORT[rarityRef] ?? rarityRef;
       const factionCode = apiJson.faction?.code ?? "";
       let cardId = apiJson.reference ?? "";
       if (_opts.backgroundUrlIdTransform) {
@@ -1196,9 +1276,7 @@
       }
       const frameBase    = (resolvedTypeCfg?.frameFile || "").split("/").pop().replace(/\.[^.]+$/, "");
       const framesuffix  = frameBase.slice(-2);
-      const _isHd = (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("q") === "hd");
-      const imgFolder = _isHd ? "illustrations_hd" : "illustrations";
-      const imgExt    = _isHd ? "jpg" : "webp";
+      const { imgFolder, imgExt } = _imgQuality();
       let rawUrl = _opts.backgroundUrl
         .replace("{imgfolder}",   imgFolder)
         .replace("{imgext}",      imgExt)
@@ -1328,25 +1406,9 @@
 
     // ── QR code — API_QR_CODE template ───────────────────────────
     if (API_QR_CODE) {
-      const qrEntry = globalDefaults.qrCode || {};
-
-      if (API_QR_CODE.url != null) {
-        // Resolve all template variables from the API JSON
-        const vars = {};
-        for (const [k, path] of Object.entries(API_QR_CODE.vars || {})) {
-          const v = _resolve(path, apiJson, lang);
-          vars[k] = v != null ? String(v) : "";
-        }
-        // Nonce base64 aléatoire — régénéré à chaque rendu (placeholder {nonce}).
-        vars.nonce = _makeNonce(API_QR_CODE.nonceLength ?? 10);
-        qrEntry.url = API_QR_CODE.url.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
-      }
-
-      if (API_QR_CODE.visible != null) {
-        qrEntry.visible = Boolean(API_QR_CODE.visible);
-      }
-
-      globalDefaults.qrCode = qrEntry;
+      // Fusionne l'URL/visibilité calculées par _buildQrEntry dans les
+      // éventuels réglages qrCode déjà présents (position, etc.).
+      globalDefaults.qrCode = { ...(globalDefaults.qrCode || {}), ..._buildQrEntry(apiJson, lang) };
     }
 
     // ── Assemble forge card JSON ──────────────────────────────────
@@ -2544,6 +2606,10 @@
   //   ref        — card reference (required)
   //   locale     — "en" or "fr" (default: "en")
   //   collection — forge collection key (default: DEFAULT_COLLECTION)
+  //   mode       — "qrcode": load the pre-generated full card image (RESOURCES.fullCardUrl)
+  //                and overlay a regenerated QR ({reference}-{nonce}) over its official QR,
+  //                WITHOUT calling the API. Absent → classic full composition.
+  //                (Intended for non-unique cards; uniques have no full image on that path.)
   //
   // <script> data attributes:
   //   data-proxy       — URL to altered-card-renderer-proxy.php (handles CORS for API + images)
@@ -2711,6 +2777,15 @@
           const locale     = this.getAttribute("locale")     || "en";
           const collection = this.getAttribute("collection") || DEFAULT_COLLECTION;
 
+          // mode="qrcode" : recouvre le QR de l'image finale du CDN par un QR
+          // régénéré, sans API ni composition. (Absent → comportement classique.)
+          if (this.getAttribute("mode") === "qrcode") {
+            AlteredRender.init({ configBaseUrl: _cfgBase })
+              .then(() => AlteredCardElement._loadQrOverlay(this, ref, locale))
+              .catch(err => { _cardErrCanvas(this, ref, "init error"); console.error(err); });
+            return;
+          }
+
           if (FETCH_MODE === 2) {
             _batchQueue.push({ element: this, ref, locale, collection });
             if (!_batchScheduled) {
@@ -2740,6 +2815,59 @@
           canvas.getContext("2d").drawImage(bitmap, 0, 0);
           element.innerHTML = "";
           element.appendChild(canvas);
+        }
+
+        // mode="qrcode" : charge l'image FINALE déjà générée (CDN) et recouvre
+        // uniquement son QR par un QR régénéré ({reference}-{nonce}). AUCUN appel API.
+        // Set/rareté déduits de la référence ; position/visibilité du QR et URL de
+        // l'image proviennent de la config (RESOURCES.fullCardUrl, globalDefaults.qrCode).
+        static async _loadQrOverlay(element, ref, locale) {
+          const parts = String(ref).split("_");
+          const set   = parts[1] || "";
+          const { imgExt } = _imgQuality();
+
+          let imageUrl = (RESOURCES.fullCardUrl || "")
+            .replace("{locale}",    locale)
+            .replace("{set}",       set)
+            .replace("{reference}", ref)
+            .replace("{imgext}",    imgExt);
+          // Route via le proxy si configuré (comme backgroundUrl).
+          if (_proxyBase && imageUrl) imageUrl = _proxyBase + "?img=" + encodeURIComponent(imageUrl);
+
+          const config     = await _ensureConfig();
+          const posState   = _buildStateFromJson(config, {});      // → settings.qrCode (position globale)
+          const rarityFull = RARITY_FROM_SHORT[parts[5]] ?? parts[5] ?? "";
+          const qrEntry    = _buildQrEntry({ reference: ref, cardRarity: { reference: rarityFull } }, locale);
+
+          const loadImg = src => new Promise(resolve => {
+            if (!src) return resolve(null);
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload  = () => resolve(img);
+            img.onerror = () => resolve(null);
+            img.src = src;
+          });
+
+          const [fullImg, qrImg] = await Promise.all([
+            loadImg(imageUrl),
+            qrEntry.url ? _generateQRImage(qrEntry.url) : Promise.resolve(null),
+          ]);
+          if (!fullImg) { _cardErrCanvas(element, ref, "image not found"); return; }
+
+          const canvas = _createResponsiveCanvas(element);
+          const ctx    = canvas.getContext("2d");
+          ctx.drawImage(fullImg, 0, 0, CARD_W, CARD_H);
+
+          const s = posState.settings.qrCode;
+          if (qrImg && s && s.visible !== false && qrEntry.visible !== false) {
+            const size = (s.size / 100) * CARD_W;
+            const x    = (s.x    / 100) * CARD_W;
+            const y    = (s.y    / 100) * CARD_H;
+            const pad  = size * 0.06;                 // recouvre l'ancien QR (pas de liseré)
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(x - size/2 - pad, y - size/2 - pad, size + 2*pad, size + 2*pad);
+            ctx.drawImage(qrImg, x - size/2, y - size/2, size, size);
+          }
         }
 
         // Mode 1 individual load — also used as fallback in mode 2.
