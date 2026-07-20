@@ -2863,9 +2863,9 @@
             const size = (s.size / 100) * CARD_W;
             const x    = (s.x    / 100) * CARD_W;
             const y    = (s.y    / 100) * CARD_H;
-            const pad  = 0;                           // 0 = contour identique au mode classique
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(x - size/2 - pad, y - size/2 - pad, size + 2*pad, size + 2*pad);
+            // Pas de fond blanc dessiné ici : le QR généré porte déjà le sien
+            // (rect blanc opaque sur tout le viewBox), aux mêmes dimensions.
+            // Même tracé qu'en mode classique — et pas de logo QR en mode qrcode.
             ctx.drawImage(qrImg, x - size/2, y - size/2, size, size);
           }
         }
