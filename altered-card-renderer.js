@@ -622,7 +622,13 @@
       forestValue:   "forestPower",
       mountainValue: "mountainPower",
       oceanValue:    "oceanPower",
-      effects:       (d, lang) => _loc(d.mainEffect, lang) ?? "",
+      // null (et non "") quand le champ est vide : l'élément est alors masqué,
+      // au lieu d'être rendu vide. Même traitement que discardEffects ci-dessous.
+      effects:       (d, lang) => {
+        const e = d.mainEffect;
+        if (!e || (Array.isArray(e) && e.length === 0)) return null;
+        return _loc(e, lang) ?? null;
+      },
       discardEffects:(d, lang) => {
         const e = d.echoEffect;
         if (!e || (Array.isArray(e) && e.length === 0)) return null;
@@ -1358,8 +1364,13 @@
       const raw = _resolve(ref, apiJson, lang);
       const el  = elements.find(e => e.id === elementId);
       if (raw == null) {
-        // Field absent from API JSON — hide the element entirely.
-        globalDefaults[elementId] = { visible: false };
+        // Field absent from API JSON — hide the element AND blank its value.
+        // Without the blank, values[] would fall back to the config demo value
+        // (config/elements.json → globalDefaults), which must never surface on
+        // a card built from API data.
+        globalDefaults[elementId] = el?.inputType === "qr"
+          ? { visible: false, url: "" }
+          : { visible: false, value: "" };
       } else {
         const val = String(raw);
         const isRich = el?.inputType === "richtext";
@@ -1516,9 +1527,15 @@
         bgH:         d.bgH        ?? fr.bgH        ?? fto.bgH        ?? ft.bgH        ?? g.bgH        ?? 0,
       };
 
+      // ?? et non || : une valeur d'API légitimement vide ("") doit RESTER vide.
+      // Avec ||, elle basculait sur la valeur de démo de config/elements.json
+      // (ex. mainEffect:[] → le texte "You may put an image here…"), ce qui
+      // produisait une carte fausse. Même arbitrage que defaultValue ci-dessus.
+      // Un champ réellement absent donne d.value === undefined → g.value, mais
+      // l'élément est alors masqué (visible:false, voir _apiJsonToCardJson).
       values[el.id] = el.inputType === "qr"
-        ? (d.url   || g.url   || "")
-        : (d.value || g.value || "");
+        ? (d.url   ?? g.url   ?? "")
+        : (d.value ?? g.value ?? "");
 
       // For biome elements, apply per-variant position/size from biomes.json.
       // biomes.json is authoritative for bgX/bgY/bgSize/bgW/bgH/textShadow
@@ -1878,7 +1895,14 @@
     if (isCircled) {
       const scale   = _getCircledScale(text);
       const newSize = Math.round(parseFloat(baseFont) * scale);
-      if (_fontNames.circled) return `${newSize}px "${_fontNames.circled}"`;
+      if (_fontNames.circled) {
+        // Quote a single family name only. On load failure _loadOneFontFace()
+        // returns the config fallback ("Roboto, Arial, sans-serif"); quoting that
+        // whole list would make it ONE non-existent family and silently defeat
+        // the fallback chain — landing back on a system font.
+        const fam = _fontNames.circled;
+        return `${newSize}px ${fam.includes(",") ? fam : `"${fam}"`}`;
+      }
       return baseFont.replace(/^[\d.]+px/, `${newSize}px`);
     }
     return baseFont;
