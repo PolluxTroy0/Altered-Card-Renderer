@@ -138,6 +138,14 @@
     // Surchargeable via config/core.json > "fullCardUrl".
     fullCardUrl: "https://cdn.alteredcore.org/cards/{locale}/{set}/{reference}.{imgext}",
 
+    // Variante HD de fullCardUrl, utilisée quand le document demande la HD
+    // (?q=hd ou window.FORGE_IMG_Q="hd") — typiquement une feuille d'impression.
+    // Un dossier DISTINCT est nécessaire : fullCardUrl ne fait varier que
+    // l'extension, or la HD vit sous cards_hd/ (744×1039 = 300 DPI en 63×88 mm)
+    // et cards/{…}.jpg n'existe pas. Mettre à null pour désactiver (on retombe
+    // alors sur fullCardUrl). Surchargeable via config/core.json > "fullCardUrlHd".
+    fullCardUrlHd: "https://cdn.alteredcore.org/cards_hd/{locale}/{set}/{reference}.jpg",
+
     // Optional transforms applied to {id} before substitution in backgroundUrl.
     // Format: array of [regexPattern, replacement] pairs — applied in order.
     // Example:
@@ -261,11 +269,16 @@
   );
   // ─────────────────────────────────────────────────────────────────
 
-  // Image quality folder/extension, driven by ?q=hd in the page URL.
+  // Image quality folder/extension, driven by ?q=hd in the page URL, or by
+  // window.FORGE_IMG_Q = "hd" for documents that have no URL to carry a query —
+  // typically a print popup opened with window.open('', '_blank') (about:blank).
+  // Same convention as window.FORGE_BASE. Semantics are per-DOCUMENT ("this page
+  // is meant for print"), which is why it is not a per-element attribute.
   // { imgFolder: "illustrations"|"illustrations_hd", imgExt: "webp"|"jpg" }
   function _imgQuality() {
     const isHd = (typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("q") === "hd");
+      (window.FORGE_IMG_Q === "hd" ||
+       new URLSearchParams(window.location.search).get("q") === "hd"));
     return {
       imgFolder: isHd ? "illustrations_hd" : "illustrations",
       imgExt:    isHd ? "jpg" : "webp",
@@ -2850,7 +2863,14 @@
           const set   = parts[1] || "";
           const { imgExt } = _imgQuality();
 
-          let imageUrl = (RESOURCES.fullCardUrl || "")
+          // En HD, basculer sur fullCardUrlHd : elle seule pointe le bon dossier
+          // (cards_hd/), fullCardUrl ne faisant varier que l'extension. Repli sur
+          // fullCardUrl si la clé n'est pas définie par la config.
+          const tpl = (imgExt === "jpg" && RESOURCES.fullCardUrlHd)
+            ? RESOURCES.fullCardUrlHd
+            : RESOURCES.fullCardUrl;
+
+          let imageUrl = (tpl || "")
             .replace("{locale}",    locale)
             .replace("{set}",       set)
             .replace("{reference}", ref)
